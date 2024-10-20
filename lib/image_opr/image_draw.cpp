@@ -11,20 +11,20 @@ using namespace lidar_camera_cal::image_opr;
 //     scaleY = 1.0;
 //     scaleZ = 1.0;
 // }
-ImageDraw::ImageDraw(float unitLength ,float scaleX, float scaleY, float scaleZ, cv::Mat cameraMatrix, cv::Mat disCoffes)
+ImageDraw::ImageDraw(float unitLength ,float scaleX, float scaleY, float scaleZ, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
     unitLength = unitLength;
     scaleX = scaleX;
     scaleY = scaleY;
     scaleZ = scaleZ;
     setCameraMatrix = cameraMatrix;
-    setDisCoffes = disCoffes;
+    setDisCoffes = distCoeffs;
 
 }
-ImageDraw::ImageDraw(cv::Mat cameraMatrix, cv::Mat disCoffes)
+ImageDraw::ImageDraw(cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
     setCameraMatrix = cameraMatrix;
-    setDisCoffes = disCoffes;
+    setDisCoffes = distCoeffs;
 }
 
 void ImageDraw::setUnitLen(float unitLength){
@@ -97,16 +97,16 @@ vector<vector<cv::Point3f>> ImageDraw::drawOrthoCoordinate3d(float cx, float cy,
     return coordinate;
 }
 void ImageDraw::drawOrthoCoordinate2d(cv::Mat &imgInputOutput, cv::Mat rvec, cv::Mat tvec,
-                                        float scale, float cx, float cy, float cz, cv::Mat cameraMatrix, cv::Mat disCoffes)
+                                        float scale, float cx, float cy, float cz, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
-    if(cameraMatrix.empty() || disCoffes.empty())
+    if(cameraMatrix.empty() || distCoeffs.empty())
     {
         if(setCameraMatrix.empty() || setDisCoffes.empty())
         {
             return;
         }
         cameraMatrix = setCameraMatrix;
-        disCoffes = setDisCoffes;
+        distCoeffs = setDisCoffes;
     }
     vector<cv::Point3f> p3d;
     writeIn(p3d, cx, cy, cz);
@@ -115,7 +115,7 @@ void ImageDraw::drawOrthoCoordinate2d(cv::Mat &imgInputOutput, cv::Mat rvec, cv:
     writeIn(p3d, cx, cy, cz + unitLength * scale);
 
     vector<cv::Point2f> p2d;
-    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, disCoffes, p2d);
+    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, distCoeffs, p2d);
     
     cv::line(imgInputOutput, p2d[0], p2d[1], cv::Scalar(0, 0, 255), 3);
     cv::line(imgInputOutput, p2d[0], p2d[2], cv::Scalar(0, 255, 0), 3);
@@ -124,16 +124,16 @@ void ImageDraw::drawOrthoCoordinate2d(cv::Mat &imgInputOutput, cv::Mat rvec, cv:
 }
 
 void ImageDraw::drawOrthoCoordinate2d(cv::Mat &imgInputOutput, vector<cv::Mat> rvecs, vector<cv::Mat> tvecs, 
-                                        float scale, float cx, float cy, float cz, cv::Mat cameraMatrix, cv::Mat disCoffes)
+                                        float scale, float cx, float cy, float cz, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
-    if(cameraMatrix.empty() || disCoffes.empty())
+    if(cameraMatrix.empty() || distCoeffs.empty())
     {
         if(setCameraMatrix.empty() || setDisCoffes.empty())
         {
             return;
         }
         cameraMatrix = setCameraMatrix;
-        disCoffes = setDisCoffes;
+        distCoeffs = setDisCoffes;
     }
     vector<cv::Point3f> p3d;
     writeIn(p3d, cx, cy, cz);
@@ -144,7 +144,7 @@ void ImageDraw::drawOrthoCoordinate2d(cv::Mat &imgInputOutput, vector<cv::Mat> r
     for(int i = 0; i < rvecs.size() && i < tvecs.size(); i++)
     {
         vector<cv::Point2f> p2d;
-        cv::projectPoints(p3d, rvecs.at(i), tvecs.at(i), cameraMatrix, disCoffes, p2d);
+        cv::projectPoints(p3d, rvecs.at(i), tvecs.at(i), cameraMatrix, distCoeffs, p2d);
         
         cv::line(imgInputOutput, p2d[0], p2d[1], cv::Scalar(0, 0, 255), 3);
         cv::line(imgInputOutput, p2d[0], p2d[2], cv::Scalar(0, 255, 0), 3);
@@ -257,11 +257,11 @@ void ImageDraw::mirror3dPoints(vector<cv::Point3f> &srcWorldPoints, vector<cv::P
 
 
 
-void ImageDraw::setParamImagePerspective3d(cv::Mat cameraMatrix, cv::Mat disCoffes, cv::Point3f imgOriPoint, cv::Size imgSizeIn3d, 
+void ImageDraw::setParamImagePerspective3d(cv::Mat cameraMatrix, cv::Mat distCoeffs, cv::Point3f imgOriPoint, cv::Size imgSizeIn3d, 
                                                     cv::Mat offsetRvec, cv::Mat offsetTvec)
 {
     setCameraMatrix = cameraMatrix;
-    setDisCoffes = disCoffes;                          
+    setDisCoffes = distCoeffs;                          
     setImgOriPoint = imgOriPoint;
     setImgSizeIn3d = imgSizeIn3d;
     setOffsetRvec = offsetRvec;
@@ -270,7 +270,7 @@ void ImageDraw::setParamImagePerspective3d(cv::Mat cameraMatrix, cv::Mat disCoff
 void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImageToPaste, cv::Mat &dstImagePasteOn, bool remove_background_color, bool center_image_axis, cv::Mat rvec, cv::Mat tvec)
 {
     cv::Mat cameraMatrix = setCameraMatrix;
-    cv::Mat disCoffes = setDisCoffes;                            
+    cv::Mat distCoeffs = setDisCoffes;                            
     cv::Point3f imgOriPoint = setImgOriPoint;
     cv::Size imgSizeIn3d = setImgSizeIn3d;
     cv::Mat offsetRvec = setOffsetRvec;
@@ -297,7 +297,7 @@ void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImageToPaste, cv::Mat &dstIm
     }
 
     vector<cv::Point2f> dstImagePoints2D;
-    cv::projectPoints(srcImagePoints3D, rvec, tvec, cameraMatrix, disCoffes, dstImagePoints2D);
+    cv::projectPoints(srcImagePoints3D, rvec, tvec, cameraMatrix, distCoeffs, dstImagePoints2D);
 
     vector<cv::Point2f> srcImagePoints2D = {cv::Point2f(0, 0), cv::Point2f(0, srcImage.cols),
                                             cv::Point2f(srcImage.rows, 0), cv::Point2f(srcImage.rows, srcImage.cols)};
@@ -332,7 +332,7 @@ void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImageToPaste, cv::Mat &dstIm
     //     return;
     // }
     cv::Mat cameraMatrix = setCameraMatrix;
-    cv::Mat disCoffes = setDisCoffes;                            
+    cv::Mat distCoeffs = setDisCoffes;                            
     cv::Point3f imgOriPoint = setImgOriPoint;
     cv::Size imgSizeIn3d = setImgSizeIn3d;
     cv::Mat offsetRvec = setOffsetRvec;
@@ -366,7 +366,7 @@ void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImageToPaste, cv::Mat &dstIm
     cv::Mat warpM, _dstImage;
     for(int i = 0; i < rvecs.size(); i++)
     {
-        cv::projectPoints(srcImagePoints3D, rvecs[i], tvecs[i], cameraMatrix, disCoffes, dstImagePoints2D);
+        cv::projectPoints(srcImagePoints3D, rvecs[i], tvecs[i], cameraMatrix, distCoeffs, dstImagePoints2D);
 
         warpM = cv::getPerspectiveTransform(srcImagePoints2D, dstImagePoints2D);
         cv::Mat _dstImage;
@@ -388,7 +388,7 @@ void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImageToPaste, cv::Mat &dstIm
     
 }
 void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImage, cv::Mat &dstImage, bool remove_background_color, bool center_image_axis, 
-                                    cv::Mat cameraMatrix, cv::Mat disCoffes, cv::Mat rvec, cv::Mat tvec,
+                                    cv::Mat cameraMatrix, cv::Mat distCoeffs, cv::Mat rvec, cv::Mat tvec,
                                     cv::Point3f imgOriPoint, cv::Size imgSizeIn3d, cv::Mat offsetRvec, cv::Mat offsetTvec)
 {
     if(center_image_axis)
@@ -411,7 +411,7 @@ void ImageDraw::pasteImagePerspective3d(cv::Mat &srcImage, cv::Mat &dstImage, bo
     }
 
     vector<cv::Point2f> dstImagePoints2D;
-    cv::projectPoints(srcImagePoints3D, rvec, tvec, cameraMatrix, disCoffes, dstImagePoints2D);
+    cv::projectPoints(srcImagePoints3D, rvec, tvec, cameraMatrix, distCoeffs, dstImagePoints2D);
 
     vector<cv::Point2f> srcImagePoints2D = {cv::Point2f(0, 0), cv::Point2f(0, srcImage.cols),
                                             cv::Point2f(srcImage.rows, 0), cv::Point2f(srcImage.rows, srcImage.cols)};
@@ -516,16 +516,16 @@ void ImageDraw::centerImageScale(cv::Mat &srcImage, cv::Mat &dstImage, float sca
 
 
 void ImageDraw::drawLine2d(cv::Mat &imgInputOutput, float x1, float y1, float z1, float x2, float y2, float z2, 
-                                    cv::Mat rvec, cv::Mat tvec, cv::Scalar color, cv::Mat cameraMatrix, cv::Mat disCoffes)
+                                    cv::Mat rvec, cv::Mat tvec, cv::Scalar color, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {   
-    if(cameraMatrix.empty() || disCoffes.empty())
+    if(cameraMatrix.empty() || distCoeffs.empty())
     {
         if(setCameraMatrix.empty() || setDisCoffes.empty())
         {
             return;
         }
         cameraMatrix = setCameraMatrix;
-        disCoffes = setDisCoffes;
+        distCoeffs = setDisCoffes;
     }
     if(rvec.empty() || tvec.empty())
     {
@@ -538,21 +538,21 @@ void ImageDraw::drawLine2d(cv::Mat &imgInputOutput, float x1, float y1, float z1
 
 
     vector<cv::Point2f> p2d;
-    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, disCoffes, p2d);
+    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, distCoeffs, p2d);
     
     cv::line(imgInputOutput, p2d[0], p2d[1], color, 3);
 }
 void ImageDraw::drawLine2d(cv::Mat &imgInputOutput, cv::Point3f point1, cv::Point3f point2,
-                            cv::Mat rvec, cv::Mat tvec, cv::Scalar color, cv::Mat cameraMatrix, cv::Mat disCoffes)
+                            cv::Mat rvec, cv::Mat tvec, cv::Scalar color, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
-    if(cameraMatrix.empty() || disCoffes.empty())
+    if(cameraMatrix.empty() || distCoeffs.empty())
     {
         if(setCameraMatrix.empty() || setDisCoffes.empty())
         {
             return;
         }
         cameraMatrix = setCameraMatrix;
-        disCoffes = setDisCoffes;
+        distCoeffs = setDisCoffes;
     }
     if(rvec.empty() || tvec.empty())
     {
@@ -563,7 +563,7 @@ void ImageDraw::drawLine2d(cv::Mat &imgInputOutput, cv::Point3f point1, cv::Poin
     writeIn(p3d, point2);
 
     vector<cv::Point2f> p2d;
-    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, disCoffes, p2d);
+    cv::projectPoints(p3d, rvec, tvec, cameraMatrix, distCoeffs, p2d);
     
     cv::line(imgInputOutput, p2d[0], p2d[1], color, 3);
 }

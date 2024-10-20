@@ -79,6 +79,9 @@
         "unordered_set": "cpp",
         "*.ipp": "cpp",
         "forward_list": "cpp",
-        "*.tpp": "cpp"
+        "*.tpp": "cpp",
+        "thread": "cpp",
+        "dense": "cpp",
+        "chrono": "cpp"
     }
 }

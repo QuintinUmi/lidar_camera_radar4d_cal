@@ -15,7 +15,8 @@
     <param name="shared_parameter" value="value" />
     <node pkg="lidar_camera_cal" type="pointcloud_process_node" name="pointcloud_process_node" output="screen"/>
     <node pkg="lidar_camera_cal" type="image_process_node" name="image_process_node" output="screen"/>
-    <!-- <node pkg="lidar_camera_cal" type="calibration_node" name="calibration_node" output="screen"/> -->
+    <node pkg="lidar_camera_cal" type="calibration_node" name="calibration_node" output="screen"/>
+    <node pkg="lidar_camera_cal" type="controller_menu" name="controller_menu" output="screen"  launch-prefix="gnome-terminal -- /bin/sh -c"/>
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/calibration.rviz" output="screen"/>
     
