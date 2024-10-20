@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build ROS Workspace",
+            "type": "shell",
+            "command": "/bin/bash",
+            "args": [
+                "-c",
+                "source /opt/ros/noetic/setup.bash && catkin_make --directory /home/quintinumi/project/ws_lidar_camera_cal -DCMAKE_BUILD_TYPE=RelWithDebInfo"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

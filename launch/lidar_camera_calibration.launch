@@ -1,0 +1,22 @@
+<launch>
+    <param name="package_path" value="$(find lidar_camera_cal)"/>
+    <rosparam file="$(find lidar_camera_cal)/config/ros-node-config.yaml" command="load"/>
+    <rosparam file="$(find lidar_camera_cal)/config/setup-caliboard.yaml" command="load"/>
+
+    <param name="/shared_parameter/center_x" value="0" />
+    <param name="/shared_parameter/center_y" value="0" />
+    <param name="/shared_parameter/center_z" value="0" />
+    <param name="/shared_parameter/length_x" value="0" />
+    <param name="/shared_parameter/length_y" value="0" />
+    <param name="/shared_parameter/length_z" value="0" />
+    <param name="/shared_parameter/rotate_x" value="0" />
+    <param name="/shared_parameter/rotate_y" value="0" />
+    <param name="/shared_parameter/rotate_z" value="0" />
+    <param name="shared_parameter" value="value" />
+    <node pkg="lidar_camera_cal" type="pointcloud_process_node" name="pointcloud_process_node" output="screen"/>
+    <node pkg="lidar_camera_cal" type="image_process_node" name="image_process_node" output="screen"/>
+    <!-- <node pkg="lidar_camera_cal" type="calibration_node" name="calibration_node" output="screen"/> -->
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/calibration.rviz" output="screen"/>
+    
+</launch>

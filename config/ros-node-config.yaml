@@ -1,0 +1,10 @@
+
+frame_id: "rslidar"
+
+image_process_img_sub_topic: /hikcamera/image_0/compressed
+image_process_img_pub_topic: /image_process/proc
+image_process_cor_pub_topic: /image_process/corners
+
+pointcloud_process_pc_sub_topic: /rslidar_points
+pointcloud_process_pc_pub_topic: /pointcloud_process/proc
+pointcloud_process_cor_pub_topic: /pointcloud_process/corners
