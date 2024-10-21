@@ -106,20 +106,20 @@ int main(int argc, char *argv[])
 
     cv::Size image_size = cv::Size(image_width, image_height);
 
-    cv::Mat cameraMatrix, distCoffes;
+    cv::Mat cameraMatrix, distCoeffs;
     fs["cameraMatrix"] >> cameraMatrix;
-    fs["distCoffes"] >> distCoffes;
+    fs["distCoeffs"] >> distCoeffs;
     fs.release();
     std::cout << cameraMatrix << std::endl;
-    std::cout << distCoffes << std::endl;
+    std::cout << distCoeffs << std::endl;
     std::cout << image_size << std::endl;
 
     cv::aruco::DICT_6X6_1000;
-    ArucoManager arucos(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoffes);
+    ArucoManager arucos(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     arucos.setDetectionParameters();
     arucos.create();
 
-    ImageDraw image_draw(arucoRealLength[0], 1, 1, 1, cameraMatrix, distCoffes);
+    ImageDraw image_draw(arucoRealLength[0], 1, 1, 1, cameraMatrix, distCoeffs);
 
     RvizDraw rviz_draw("image_process_node/rviz_draw", frame_id);
     

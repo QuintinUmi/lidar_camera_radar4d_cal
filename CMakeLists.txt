@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   dynamic_reconfigure
   visualization_msgs
+  message_filters
 )
 
 find_package(Eigen3 REQUIRED)
@@ -162,15 +163,32 @@ add_library(rviz_draw_lib
   include include/tools/rviz_draw.h
   lib/tools/rviz_draw.cpp
 )
+# add_library(CommandHandle_lib
+#   include include/tools/CommandHandler.h
+#   # lib/CommandHandler.cpp
+# )
+add_library(file_operator_lib
+  include include/tools/file_operator.h
+  lib/tools/file_operator.cpp
+)
 
 add_dependencies(conversion_bridge_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(rviz_draw_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(CommandHandle_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(file_operator_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(conversion_bridge_lib
   ${catkin_LIBRARIES}
 )
 target_link_libraries(rviz_draw_lib
   ${catkin_LIBRARIES}
+)
+# target_link_libraries(CommandHandle_lib
+#   ${catkin_LIBRARIES}
+# )
+target_link_libraries(file_operator_lib
+  ${catkin_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
 )
 
 # ------------------------------------- lidar_camera_cal -------------------------------------------
@@ -278,9 +296,11 @@ target_link_libraries(image_process_lib
 
 
 add_executable(test1 src/test1.cpp)
-# add_executable(calibration_node src/calibration_node.cpp)
+add_executable(calibration_node src/calibration_node.cpp)
 add_executable(image_process_node src/image_process_node.cpp)
 add_executable(pointcloud_process_node src/pointcloud_process_node.cpp)
+add_executable(controller_menu src/controller_menu.cpp)
+add_executable(lidar_cam_syn_fusion src/demo/lidar_cam_syn_fusion.cpp)
 
 
 target_link_libraries(test1
@@ -289,16 +309,16 @@ target_link_libraries(test1
   ${OpenCV_LIBRARIES}
   
 )
-# target_link_libraries(calibration_node
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-#   ${OpenCV_LIBRARIES}
-#   conversion_bridge_lib
-#   calibration_tool_lib
-#   aruco_manager_lib
-#   image_draw_lib
-#   image_process_lib
-# )
+target_link_libraries(calibration_node
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  conversion_bridge_lib
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+)
 target_link_libraries(image_process_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
@@ -314,14 +334,21 @@ target_link_libraries(pointcloud_process_node
   conversion_bridge_lib
   rviz_draw_lib
 )
+target_link_libraries(controller_menu
+  ${catkin_LIBRARIES}
+  file_operator_lib
+)
+target_link_libraries(lidar_cam_syn_fusion
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  conversion_bridge_lib
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+)
 
-# target_link_libraries(point_cloud_filter
-#   ${catkin_LIBRARIES}
-#   point_cloud_subscriber_publisher_lib
-#   # point_cloud_process_lib
-#   dynamic_reconfigure_lib
-#   recorder_lib
-# )
 # target_link_libraries(rosbag_record_example
 #   ${catkin_LIBRARIES}
 #   point_cloud_subscriber_publisher_lib

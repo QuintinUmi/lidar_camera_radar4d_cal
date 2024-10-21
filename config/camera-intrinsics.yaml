@@ -10,7 +10,7 @@ cameraMatrix: !!opencv-matrix
    dt: d
    data: [ 1120, 0., 1120, 0.,
        1120, 870, 0., 0., 1. ]
-distCoffes: !!opencv-matrix
+distCoffs: !!opencv-matrix
    rows: 1
    cols: 5
    dt: d
@@ -23,7 +23,7 @@ newCameraMatrixAlpha1: !!opencv-matrix
    dt: d
    data: [ 8.5009198984757393e+02, 0., 6.3322339082553026e+02, 0.,
        8.5060638134009923e+02, 5.0140759373038122e+02, 0., 0., 1. ]
-newDisCoffesAlpha1: !!opencv-matrix
+newDistCoeffsAlpha1: !!opencv-matrix
    rows: 1
    cols: 5
    dt: d
@@ -36,7 +36,7 @@ newCameraMatrixAlpha0: !!opencv-matrix
    dt: d
    data: [ 8.5521077240868806e+02, 0., 6.3320909928971662e+02, 0.,
        8.5739699983148921e+02, 5.0145406166620387e+02, 0., 0., 1. ]
-newDisCoffesAlpha0: !!opencv-matrix
+newDistCoeffsAlpha0: !!opencv-matrix
    rows: 1
    cols: 5
    dt: d

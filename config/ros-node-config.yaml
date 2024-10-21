@@ -8,3 +8,11 @@ image_process_cor_pub_topic: /image_process/corners
 pointcloud_process_pc_sub_topic: /rslidar_points
 pointcloud_process_pc_pub_topic: /pointcloud_process/proc
 pointcloud_process_cor_pub_topic: /pointcloud_process/corners
+
+calibration_img_pub_topic: /lidar_camera_cal/image/proc
+calibration_command_sub_topic: /lidar_camera_cal/command_controller
+calibration_command_pub_topic: /lidar_camera_cal/command_cal_node
+
+pointset_save_path: data/point_set.csv
+error_analysis_save_path: data/border_error_anaylysis.csv
+extrinsics_save_path: config/extrinsics.yaml
