@@ -1,48 +1,72 @@
-#include "tools/ros_topic_manager.h"
-#include "pointcloud2_opr/point_cloud_process.h"
-
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl_ros/transforms.h>
-#include <Eigen/Geometry>
+#include <pcl/point_types.h>
+#include <pcl/io/io.h>
 
-#include <cv_bridge/cv_bridge.h>
-#include "opencv2/opencv.hpp"    
+// 自定义点类型的定义
+struct PointXYZIRT
+{
+    PCL_ADD_POINT4D;
+    float intensity;
+    uint16_t ring;
+    double timestamp;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
 
-#include "calibration_tool.h"
+// 在PCL库中注册新的点类型
+POINT_CLOUD_REGISTER_POINT_STRUCT(PointXYZIRT,
+    (float, x, x)
+    (float, y, y)
+    (float, z, z)
+    (float, intensity, intensity)
+    (uint16_t, ring, ring)
+    (double, timestamp, timestamp)
+)
 
-using namespace lidar_camera_cal;
+double ensureNanoseconds(double timestamp) {
+    // Determine the magnitude of the timestamp to guess if it's in seconds
+    double magnitude = timestamp > 0 ? std::floor(std::log10(timestamp)) : 0;
 
+    std::cout << magnitude << std::endl;
+    // If the magnitude is less than 9, assume the timestamp is in seconds (common threshold)
+    if (magnitude < 10) {
+        return timestamp * 1e9;  // Convert seconds to nanoseconds
+    }
+
+    // If the magnitude is 9 or greater, assume it's already in nanoseconds
+    return timestamp;
+}
+
+void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+{
+    // 创建自定义点云类型的智能指针
+    pcl::PointCloud<PointXYZIRT>::Ptr cloud(new pcl::PointCloud<PointXYZIRT>);
+
+    // 从ROS消息转换为PCL点云
+    pcl::fromROSMsg(*cloud_msg, *cloud);
+
+    // 输出第一个点的时间戳（假设所有点具有相同的时间戳）
+    if (!cloud->points.empty()) {
+        ROS_INFO("Received point cloud with timestamp: %ld", ensureNanoseconds(cloud->points[0].timestamp));
+    } else {
+        ROS_INFO("Received an empty point cloud.");
+    }
+
+    for (auto point : cloud->points) {
+        std::cout << "ring:" << point.ring << std::endl;
+    }
+    // 可以在这里添加更多处理逻辑
+}
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "test1");
+    ros::init(argc, argv, "lidar_subscriber");
     ros::NodeHandle nh;
 
-    ImageSubscriber sub(nh, 10);
+    ros::Subscriber sub = nh.subscribe("/rslidar_points", 10, cloudCallback);
 
-    sub.addTopic("/hikcamera/image_0/compressed");
-    sub.addTopic("/hikcamera/image_1/compressed");
-    cv::namedWindow("test1", cv::WINDOW_NORMAL);
+    ros::spin();
 
-    ImagePublisher pub(nh);
-    pub.addTopic("/hikcamera/image_1/test", 10);
-
-    while (ros::ok()) {
-        ros::spinOnce();
-        ImagePacket img_pack = sub.getImage("/hikcamera/image_1/compressed");
-        if (img_pack) {
-            cv::imshow("test1", *img_pack.image);
-            cv::waitKey(1);
-            pub.publish("/hikcamera/image_1/test", img_pack, "bgr8");
-        }
-        
-    }
-
-    /* code */
     return 0;
 }

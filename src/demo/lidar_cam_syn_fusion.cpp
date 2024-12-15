@@ -207,8 +207,8 @@ int main(int argc, char **argv) {
     ros::Publisher pub_cloud = nh.advertise<sensor_msgs::PointCloud2>("synced_cloud", 1);
 
     // ros::Subscriber sub_image = nh.subscribe("/hikcamera/image_0", 1, imageCallback);
-    ros::Subscriber sub_compressed_image = nh.subscribe("/hikcamera/image_0/compressed", 1, compressedImageCallback);
-    ros::Subscriber sub_cloud = nh.subscribe("/rslidar_points", 1, cloudCallback);
+    ros::Subscriber sub_compressed_image = nh.subscribe(topic_img_sub, 1, compressedImageCallback);
+    ros::Subscriber sub_cloud = nh.subscribe(topic_pc_sub, 1, cloudCallback);
 
     ros::Rate loop_rate(10); // 调整为所需的频率
     while (ros::ok()) {

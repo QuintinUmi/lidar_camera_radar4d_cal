@@ -1,7 +1,9 @@
+undistort: false
+undistort_mode: 0
 
 frame_id: "rslidar"
 
-image_process_img_sub_topic: /hikcamera/image_0/compressed
+image_process_img_sub_topic: /hikcamera/image_1/compressed
 image_process_img_pub_topic: /image_process/proc
 image_process_cor_pub_topic: /image_process/corners
 
