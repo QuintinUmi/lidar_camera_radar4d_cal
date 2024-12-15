@@ -116,10 +116,10 @@ int main(int argc, char *argv[])
 
     cv::aruco::DICT_6X6_1000;
     ArucoManager arucos(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
-    arucos.setDetectionParameters();
+    arucos.setDetectionParameters(2);
     arucos.create();
 
-    ImageDraw image_draw(arucoRealLength[0], 1, 1, 1, cameraMatrix, distCoeffs);
+    ImageDraw image_draw(arucoRealLength[0], 1.0, 1.0, 1.0, cameraMatrix, distCoeffs);
 
     RvizDraw rviz_draw("image_process_node/rviz_draw", frame_id);
     
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
             image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
             image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
             image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
-        
+            
         }
 
 

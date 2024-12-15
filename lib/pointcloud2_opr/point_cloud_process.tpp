@@ -195,7 +195,7 @@ namespace lidar_camera_cal::pointcloud2_opr
         pcl::PassThrough<pcl::PointXYZI> pass;
         pass.setInputCloud(this->processed_cloud);          
         pass.setFilterFieldName(axis);      
-        pass.setFilterLimits(0.0, FLT_MAX); 
+        pass.setFilterLimits(min, max); 
 
         typename pcl::PointCloud<PointT>::Ptr tempCloud(new typename pcl::PointCloud<PointT>);
         pass.filter(*tempCloud);

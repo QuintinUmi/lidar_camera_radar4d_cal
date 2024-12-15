@@ -13,10 +13,10 @@ using namespace lidar_camera_cal::image_opr;
 // }
 ImageDraw::ImageDraw(float unitLength ,float scaleX, float scaleY, float scaleZ, cv::Mat cameraMatrix, cv::Mat distCoeffs)
 {
-    unitLength = unitLength;
-    scaleX = scaleX;
-    scaleY = scaleY;
-    scaleZ = scaleZ;
+    this->unitLength = unitLength;
+    this->scaleX = scaleX;
+    this->scaleY = scaleY;
+    this->scaleZ = scaleZ;
     setCameraMatrix = cameraMatrix;
     setDisCoffes = distCoeffs;
 
@@ -28,13 +28,13 @@ ImageDraw::ImageDraw(cv::Mat cameraMatrix, cv::Mat distCoeffs)
 }
 
 void ImageDraw::setUnitLen(float unitLength){
-    unitLength;
+    this->unitLength = unitLength;
 }
 void ImageDraw::setScale(float scaleX, float scaleY, float scaleZ)
 {
-    scaleX = scaleX;
-    scaleY = scaleY;
-    scaleZ = scaleZ;
+    this->scaleX = scaleX;
+    this->scaleY = scaleY;
+    this->scaleZ = scaleZ;
 }
 
 
@@ -440,8 +440,8 @@ void ImageDraw::centerImageScale(cv::Mat &srcImage, cv::Mat &dstImage)
     float srcH = srcImage.size().height, srcW = srcImage.size().width;
     float cX = srcW / 2;
     float cY = srcH / 2;
-    float scaleX = scaleX;
-    float scaleY = scaleY;
+    float scaleX = this->scaleX;
+    float scaleY = this->scaleY;
 
     cv::Point2f srcP[] = {  cv::Point2f(srcW, 0), 
                             cv::Point2f(srcW ,srcH), 
@@ -755,6 +755,25 @@ void ImageDraw::drawPointsOnImageZ(const pcl::PointCloud<pcl::PointXYZI>& cloud,
     for (size_t i = 0; i < points.size(); i++) 
     {
         cv::Scalar color = ImageDraw::intensityToRainbowColor(cloud.points[i].z, min_z, max_z);
+        cv::circle(image, points[i], 3, color, -1); 
+    }
+}
+void ImageDraw::drawPointsOnImageDistance(const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                const std::vector<cv::Point2f>& points,
+                                cv::Mat& image) 
+{
+    float min_dis = std::numeric_limits<float>::max();
+    float max_dis = -std::numeric_limits<float>::max();
+
+    for (const auto& point : cloud.points) 
+    {
+        min_dis = std::min(min_dis, static_cast<float>(sqrt(pow(point.x, 2) + pow(point.y, 2) + pow(point.z, 2))));
+        max_dis = std::max(max_dis, static_cast<float>(sqrt(pow(point.x, 2) + pow(point.y, 2) + pow(point.z, 2))));
+    }
+
+    for (size_t i = 0; i < points.size(); i++) 
+    {
+        cv::Scalar color = ImageDraw::intensityToRainbowColor(cloud.points[i].z, min_dis, max_dis);
         cv::circle(image, points[i], 3, color, -1); 
     }
 }
