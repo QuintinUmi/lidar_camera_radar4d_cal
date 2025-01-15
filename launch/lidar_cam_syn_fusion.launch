@@ -3,6 +3,7 @@
     <rosparam file="$(find lidar_camera_cal)/config/ros-node-config.yaml" command="load"/>
     <rosparam file="$(find lidar_camera_cal)/config/setup-caliboard.yaml" command="load"/>
 
+    <node pkg="lidar_camera_cal" type="merge_points_pub" name="merge_points_pub" output="screen"/>
     <node pkg="lidar_camera_cal" type="lidar_cam_syn_fusion" name="lidar_cam_syn_fusion" output="screen"/>
 
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/fusion.rviz" output="screen"/>
