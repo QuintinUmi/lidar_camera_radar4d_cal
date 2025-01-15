@@ -51,8 +51,8 @@ namespace lidar_camera_cal
                 ~ArucoManager();
 
                 void setDetectionParameters(int cornerRefinementMethod = cv::aruco::CORNER_REFINE_APRILTAG, int adaptiveThreshWinSizeMin = 3, int adaptiveThreshWinSizeMax = 23,
-                                            int adaptiveThreshWinSizeStep = 10, int adaptiveThreshConstant = 7, 
-                                            int minMarkerPerimeterRate = 0.03, int maxMarkerPerimeterRate = 0.8);
+                                            int adaptiveThreshWinSizeStep = 10, double adaptiveThreshConstant = 7, 
+                                            double minMarkerPerimeterRate = 0.03, double maxMarkerPerimeterRate = 0.8);
                 void create();
                 void arucoMapInit();
                 // void release();

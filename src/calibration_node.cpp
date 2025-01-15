@@ -58,6 +58,9 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "calibration_node");
     ros::NodeHandle rosHandle;
 
+    bool undistort;
+    int undistort_mode;
+
     std::string frame_id;
 
     std::string topic_pc_sub;
@@ -73,6 +76,9 @@ int main(int argc, char *argv[])
 
     std::string topic_command_sub;
     std::string topic_command_pub;
+
+    rosHandle.param("undistort", undistort, false);
+    rosHandle.param("undistort_mode", undistort_mode, 0);
 
     rosHandle.param("frame_id", frame_id, std::string("rslidar"));
 
@@ -114,15 +120,29 @@ int main(int argc, char *argv[])
 
     cv::Size image_size = cv::Size(image_width, image_height);
 
+    std::string matrix_alpha = "newCameraMatrixAlpha";
+    std::string distcoeffs_alpha = "newDistCoeffsAlpha";
+    if (undistort_mode == 0) {
+        matrix_alpha += "0";
+        distcoeffs_alpha += "0";
+    } else {
+        matrix_alpha += "1";
+        distcoeffs_alpha += "1";
+    }
     cv::Mat cameraMatrix, distCoeffs, newCameraMatrix, newDistCoeffes;
     fs["cameraMatrix"] >> cameraMatrix;
     fs["distCoeffs"] >> distCoeffs;
-    fs["newCameraMatrixAlpha0"] >> newCameraMatrix;
-    fs["newDistCoeffsAlpha0"] >> newDistCoeffes;
+    fs[matrix_alpha] >> newCameraMatrix;
+    fs[distcoeffs_alpha] >> newDistCoeffes;
     fs.release();
     std::cout << cameraMatrix << std::endl;
     std::cout << distCoeffs << std::endl;
+    std::cout << newCameraMatrix << std::endl;
+    std::cout << newDistCoeffes << std::endl;
     std::cout << image_size << std::endl;
+
+    cv::Mat map1, map2;
+    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(), newCameraMatrix, image_size, CV_32FC2, map1, map2);
 
 
     std::string cornerset_csv_path;
@@ -151,7 +171,12 @@ int main(int argc, char *argv[])
 
     PointCloud2Proc<pcl::PointXYZI> pc_process(true);
 
-    ImageDraw image_draw(1, 1, 1, 1, cameraMatrix, distCoeffs);
+    ImageDraw image_draw;
+    if (undistort) {
+        image_draw = ImageDraw(1.0, 1.0, 1.0, 1.0, newCameraMatrix, newDistCoeffes);
+    } else {
+        image_draw = ImageDraw(1.0, 1.0, 1.0, 1.0, cameraMatrix, distCoeffs);
+    }
 
     RQTConfig rqtCfg;
     // PointcloudFilterReconfigure filterRecfg(rosHandle);
@@ -175,6 +200,7 @@ int main(int argc, char *argv[])
 
     yaml_operator.readExtrinsicsFromYaml(R, t);
 
+
     while(ros::ok())
     {
         ros::spinOnce();
@@ -197,16 +223,22 @@ int main(int argc, char *argv[])
         rcv_image_packet.frame_id = frame_id;
         cv::Mat image = *rcv_image_packet.image;
 
-
+        cv::Mat proc_image;
+        if (undistort) {
+            cv::remap(image, proc_image, map1, map2, cv::INTER_LINEAR);
+        } else {
+            proc_image = image;
+        }     
+        
         pc_process.transform(R, t);
         pc_process.scaleTo(1000.0f);
-        pc_process.PassThroughFilter("z", 700, 4000);
+        pc_process.PassThroughFilter("z", 0.0, FLT_MAX);
 
         std::vector<cv::Point2f> imagePoints;
         image_draw.projectPointsToImage(*pc_process.getProcessedPointcloud(), imagePoints);
-        image_draw.drawPointsOnImageIntensity(*pc_process.getProcessedPointcloud(), imagePoints, image);
+        image_draw.drawPointsOnImageIntensity(*pc_process.getProcessedPointcloud(), imagePoints, proc_image);
 
-        img_pub.publish("/show_fusion_cloud", ImagePacket(std::make_shared<cv::Mat>(image), frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+        img_pub.publish("/show_fusion_cloud", ImagePacket(std::make_shared<cv::Mat>(proc_image), frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
         // cv::imshow("Projected Points", image);
         // int key = cv::waitKey(1); 
         int key = 0; 

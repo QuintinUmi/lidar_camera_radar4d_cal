@@ -73,12 +73,12 @@ void fusionProcessPub(sensor_msgs::Image img_msg, sensor_msgs::PointCloud2 pc_ms
     pc_process.setCloud(cloud);
     pc_process.transform(R, t);
     pc_process.scaleTo(1000.0f);
-    pc_process.PassThroughFilter("z", 700, 4000);
+    pc_process.PassThroughFilter("z", 0.0, FLT_MAX);
 
     ImageDraw image_draw(1, 1, 1, 1, cameraMatrix, distCoeffs);
     std::vector<cv::Point2f> imagePoints;
     image_draw.projectPointsToImage(*pc_process.getProcessedPointcloud(), imagePoints);
-    image_draw.drawPointsOnImageIntensity(*pc_process.getProcessedPointcloud(), imagePoints, cv_image);
+    image_draw.drawPointsOnImageZ(*pc_process.getProcessedPointcloud(), imagePoints, cv_image);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(img_msg.header, "bgr8", cv_image).toImageMsg();
     lidar_cam_fusion_image.publish(msg);
@@ -97,7 +97,7 @@ void publishSyncMessages(image_transport::Publisher& img_pub, ros::Publisher& cl
         // Check if all messages are within the time window
             
             auto max_time = std::max({image_cache.rbegin()->first.toSec(), cloud_cache.rbegin()->first.toSec()});
-            if (std::abs((image_cache.begin()->first - cloud_cache.begin()->first).toSec()) <= 0.01) {
+            if (std::abs((image_cache.begin()->first - cloud_cache.begin()->first).toSec()) <= 0.05) {
                 img_pub.publish(image_cache.begin()->second);
                 cloud_pub.publish(cloud_cache.begin()->second);
                 fusionProcessPub(image_cache.begin()->second, cloud_cache.begin()->second, lidar_cam_fusion_image);
@@ -207,8 +207,8 @@ int main(int argc, char **argv) {
     ros::Publisher pub_cloud = nh.advertise<sensor_msgs::PointCloud2>("synced_cloud", 1);
 
     // ros::Subscriber sub_image = nh.subscribe("/hikcamera/image_0", 1, imageCallback);
-    ros::Subscriber sub_compressed_image = nh.subscribe("/hikcamera/image_0/compressed", 1, compressedImageCallback);
-    ros::Subscriber sub_cloud = nh.subscribe("/rslidar_points", 1, cloudCallback);
+    ros::Subscriber sub_compressed_image = nh.subscribe(topic_img_sub, 1, compressedImageCallback);
+    ros::Subscriber sub_cloud = nh.subscribe(topic_pc_sub, 1, cloudCallback);
 
     ros::Rate loop_rate(10); // 调整为所需的频率
     while (ros::ok()) {

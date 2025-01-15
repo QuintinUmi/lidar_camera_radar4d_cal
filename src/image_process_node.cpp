@@ -48,10 +48,14 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "image_process_node");
     ros::NodeHandle rosHandle;
 
+    bool undistort;
+    int undistort_mode;
     std::string frame_id;
     std::string topic_img_sub;
     std::string topic_img_pub;
     std::string topic_cor_pub;
+    rosHandle.param("undistort", undistort, false);
+    rosHandle.param("undistort_mode", undistort_mode, 0);
     rosHandle.param("frame_id", frame_id, std::string("rslidar"));
 	rosHandle.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
     rosHandle.param("image_process_img_pub_topic", topic_img_pub, std::string("/image_process/proc"));
@@ -106,20 +110,47 @@ int main(int argc, char *argv[])
 
     cv::Size image_size = cv::Size(image_width, image_height);
 
-    cv::Mat cameraMatrix, distCoeffs;
+    std::string matrix_alpha = "newCameraMatrixAlpha";
+    std::string distcoeffs_alpha = "newDistCoeffsAlpha";
+    if (undistort_mode == 0) {
+        matrix_alpha += "0";
+        distcoeffs_alpha += "0";
+    } else {
+        matrix_alpha += "1";
+        distcoeffs_alpha += "1";
+    }
+    cv::Mat cameraMatrix, distCoeffs, newCameraMatrix, newDistCoeffes;
     fs["cameraMatrix"] >> cameraMatrix;
     fs["distCoeffs"] >> distCoeffs;
+    fs[matrix_alpha] >> newCameraMatrix;
+    fs[distcoeffs_alpha] >> newDistCoeffes;
     fs.release();
     std::cout << cameraMatrix << std::endl;
     std::cout << distCoeffs << std::endl;
+    std::cout << newCameraMatrix << std::endl;
+    std::cout << newDistCoeffes << std::endl;
     std::cout << image_size << std::endl;
 
+    cv::Mat map1, map2;
+    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(), newCameraMatrix, image_size, CV_32FC2, map1, map2);
+
+
     cv::aruco::DICT_6X6_1000;
-    ArucoManager arucos(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
-    arucos.setDetectionParameters();
+    ArucoManager arucos;
+    if (undistort) {
+        arucos = ArucoManager(dictionaryName, ids, arucoRealLength, newCameraMatrix, newDistCoeffes);
+    } else {
+        arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
+    }
+    arucos.setDetectionParameters(3);
     arucos.create();
 
-    ImageDraw image_draw(arucoRealLength[0], 1, 1, 1, cameraMatrix, distCoeffs);
+    ImageDraw image_draw;
+    if (undistort) {
+        image_draw = ImageDraw(arucoRealLength[0], 1.0, 1.0, 1.0, newCameraMatrix, newDistCoeffes);
+    } else {
+        image_draw = ImageDraw(arucoRealLength[0], 1.0, 1.0, 1.0, cameraMatrix, distCoeffs);
+    }
 
     RvizDraw rviz_draw("image_process_node/rviz_draw", frame_id);
     
@@ -148,12 +179,20 @@ int main(int argc, char *argv[])
         }
         rcv_image_packet.frame_id = frame_id;
 
+        cv::Mat proc_image;
+        if (undistort) {
+            cv::remap(*rcv_image_packet.image, proc_image, map1, map2, cv::INTER_LINEAR);
+        } else {
+            proc_image = *rcv_image_packet.image;
+        }     
+
         std::vector<cv::Vec3d> rvecs; 
         std::vector<cv::Vec3d> tvecs;
         pcl::Indices detectedIds;
-        arucos.extCalibMultipulArucos(*rcv_image_packet.image, rvecs, tvecs, detectedIds);
+        arucos.extCalibMultipulArucos(proc_image, rvecs, tvecs, detectedIds);
         if(detectedIds.size() == 0) {
             ROS_INFO("Not Marker Detected \n");
+            image_pub.publish(topic_img_pub, rcv_image_packet);
             continue;
         }
 
@@ -197,11 +236,11 @@ int main(int argc, char *argv[])
 
             ImageProc::transform3dPoints(corners_plane, corners_3d, rvec, tvec);
 
-            image_draw.drawOrthoCoordinate2d(*rcv_image_packet.image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawOrthoCoordinate2d(proc_image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
+            image_draw.drawLine2d(proc_image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
 
         }
         else
@@ -219,12 +258,12 @@ int main(int argc, char *argv[])
 
             ImageProc::transform3dPoints(corners_plane, corners_3d, rvec, tvec);
 
-            image_draw.drawOrthoCoordinate2d(*rcv_image_packet.image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
-            image_draw.drawLine2d(*rcv_image_packet.image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
-        
+            image_draw.drawOrthoCoordinate2d(proc_image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
+            image_draw.drawLine2d(proc_image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            
         }
 
 

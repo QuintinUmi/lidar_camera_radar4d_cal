@@ -14,6 +14,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <math.h>
+
 #include "image_transport/image_transport.h"
 
 
@@ -89,7 +91,9 @@ namespace lidar_camera_cal
                 void drawPointsOnImageX(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<cv::Point2f>& points, cv::Mat& image);
                 void drawPointsOnImageY(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<cv::Point2f>& points, cv::Mat& image);
                 void drawPointsOnImageZ(const pcl::PointCloud<pcl::PointXYZI>& cloud, const std::vector<cv::Point2f>& points, cv::Mat& image);
-
+                void drawPointsOnImageDistance(const pcl::PointCloud<pcl::PointXYZI>& cloud,
+                                const std::vector<cv::Point2f>& points,
+                                cv::Mat& image);
                 // cv::Mat cal_2vec_rvec(cv::Point3f vecOri, cv::Point3f vecDst);
 
             private:

@@ -37,8 +37,8 @@ ArucoManager::~ArucoManager()
 }
 
 void ArucoManager::setDetectionParameters(int cornerRefinementMethod, int adaptiveThreshWinSizeMin, int adaptiveThreshWinSizeMax,
-                                    int adaptiveThreshWinSizeStep, int adaptiveThreshConstant, 
-                                    int minMarkerPerimeterRate, int maxMarkerPerimeterRate)
+                                    int adaptiveThreshWinSizeStep, double adaptiveThreshConstant, 
+                                    double minMarkerPerimeterRate, double maxMarkerPerimeterRate)
 {
     if (!_dParameters) {
         std::cerr << "Detection parameters are not initialized." << std::endl;
