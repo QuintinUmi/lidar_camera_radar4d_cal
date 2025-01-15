@@ -686,14 +686,18 @@ void ImageDraw::drawPointsOnImageIntensity(const pcl::PointCloud<pcl::PointXYZI>
                                 const std::vector<cv::Point2f>& points,
                                 cv::Mat& image) 
 {
-    float min_intensity = std::numeric_limits<float>::max();
-    float max_intensity = -std::numeric_limits<float>::max();
+    // static float min_intensity = std::numeric_limits<float>::max();
+    // static float max_intensity = -std::numeric_limits<float>::max();
+    static float min_intensity = 0;
+    static float max_intensity = 70;
 
-    for (const auto& point : cloud.points) 
-    {
-        min_intensity = std::min(min_intensity, point.intensity);
-        max_intensity = std::max(max_intensity, point.intensity);
-    }
+    // for (const auto& point : cloud.points) 
+    // {
+    //     // min_intensity = std::min(min_intensity, point.intensity);
+    //     // max_intensity = std::max(max_intensity, point.intensity);  
+    //     std::cout << " " << point.intensity;
+    // }
+    // std::cout << std::endl;
 
     for (size_t i = 0; i < points.size(); i++) 
     {

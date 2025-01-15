@@ -73,12 +73,12 @@ void fusionProcessPub(sensor_msgs::Image img_msg, sensor_msgs::PointCloud2 pc_ms
     pc_process.setCloud(cloud);
     pc_process.transform(R, t);
     pc_process.scaleTo(1000.0f);
-    pc_process.PassThroughFilter("z", 0.0, FLT_MAX);
+    pc_process.PassThroughFilter("z", 1000.0, FLT_MAX);
 
     ImageDraw image_draw(1, 1, 1, 1, cameraMatrix, distCoeffs);
     std::vector<cv::Point2f> imagePoints;
     image_draw.projectPointsToImage(*pc_process.getProcessedPointcloud(), imagePoints);
-    image_draw.drawPointsOnImageZ(*pc_process.getProcessedPointcloud(), imagePoints, cv_image);
+    image_draw.drawPointsOnImageIntensity(*pc_process.getProcessedPointcloud(), imagePoints, cv_image);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(img_msg.header, "bgr8", cv_image).toImageMsg();
     lidar_cam_fusion_image.publish(msg);

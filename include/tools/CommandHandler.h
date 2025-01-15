@@ -70,7 +70,7 @@ namespace lidar_camera_cal
         // ROS_INFO("Received command: %s", msg->data.c_str());
         // this->received_status_ = true;
         latest_command_ = msg->data;
-        ROS_INFO("Received command: %s", latest_command_.c_str());
+        // ROS_INFO("Received command: %s", latest_command_.c_str());
         this->received_status_ = true;
 
         // Debugging output
