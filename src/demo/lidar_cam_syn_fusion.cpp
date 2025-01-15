@@ -97,7 +97,7 @@ void publishSyncMessages(image_transport::Publisher& img_pub, ros::Publisher& cl
         // Check if all messages are within the time window
             
             auto max_time = std::max({image_cache.rbegin()->first.toSec(), cloud_cache.rbegin()->first.toSec()});
-            if (std::abs((image_cache.begin()->first - cloud_cache.begin()->first).toSec()) <= 0.01) {
+            if (std::abs((image_cache.begin()->first - cloud_cache.begin()->first).toSec()) <= 0.05) {
                 img_pub.publish(image_cache.begin()->second);
                 cloud_pub.publish(cloud_cache.begin()->second);
                 fusionProcessPub(image_cache.begin()->second, cloud_cache.begin()->second, lidar_cam_fusion_image);
