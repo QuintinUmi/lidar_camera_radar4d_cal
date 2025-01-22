@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 		
 		// Detect caliboard corners
 		pcl::PointCloud<pcl::PointXYZI>::Ptr corners;
-		corners = pc_process.extractNearestRectangleCorners(false, PointCloud2Proc<pcl::PointXYZI>::OptimizationMethod::AngleAtCentroid, caliboard_width, caliboard_height, 0.05);
+		corners = pc_process.extractNearestRectangleCorners(false, PointCloud2Proc<pcl::PointXYZI>::OptimizationMethod::None, caliboard_width, caliboard_height, 0.05);
 		CalTool::sortPointByNormalWorldFrame<pcl::PointXYZI>(corners, pc_process.getPlaneNormals());
 
 		geometry_msgs::PolygonStamped ros_corners;

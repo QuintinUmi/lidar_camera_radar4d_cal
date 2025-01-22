@@ -22,6 +22,7 @@
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include "tools/timestamp_cov.h"
 
@@ -357,6 +358,169 @@ namespace lidar_camera_cal {
                 corners.header.frame_id = corners_packet.frame_id;  // 设置适当的 frame_id
                 it->second.publish(corners);
                 if (SHOW_DEBUG_MESSAGE) ROS_INFO("Published Corners to topic: %s", topic.c_str());
+            } else {
+                ROS_WARN("No publisher available for topic: %s", topic.c_str());
+            }
+        }
+
+    private:
+        ros::NodeHandle nh_;
+        std::map<std::string, ros::Publisher> pub_;
+    };
+}
+
+
+
+namespace lidar_camera_cal {
+
+    struct TransformPacket {
+        geometry_msgs::PoseStamped pose;  // 使用 PoseStamped 传输
+        bool is_valid;                    // 数据有效标志
+
+        operator bool() const {
+            return is_valid;
+        }
+
+        TransformPacket() : is_valid(false) {}
+        TransformPacket(geometry_msgs::PoseStamped pose)
+            : pose(pose), is_valid(true) {}
+    };
+
+    class TransformUtils {
+    public:
+        // 静态函数：将 rvec 和 tvec 转换为 TransformPacket
+        static TransformPacket createTransformPacket(const cv::Vec3d& rvec, const cv::Vec3d& tvec, const std::string& frame_id) {
+            // 将 rvec 转换为四元数
+            cv::Mat rotation_matrix;
+            cv::Rodrigues(rvec, rotation_matrix);
+            cv::Matx33d R(rotation_matrix);
+
+            double qw = sqrt(1.0 + R(0, 0) + R(1, 1) + R(2, 2)) / 2.0;
+            double qx = (R(2, 1) - R(1, 2)) / (4.0 * qw);
+            double qy = (R(0, 2) - R(2, 0)) / (4.0 * qw);
+            double qz = (R(1, 0) - R(0, 1)) / (4.0 * qw);
+
+            // 填充 PoseStamped 消息
+            geometry_msgs::PoseStamped pose_msg;
+            pose_msg.header.stamp = ros::Time::now();
+            pose_msg.header.frame_id = frame_id;
+            pose_msg.pose.position.x = tvec[0];
+            pose_msg.pose.position.y = tvec[1];
+            pose_msg.pose.position.z = tvec[2];
+            pose_msg.pose.orientation.x = qx;
+            pose_msg.pose.orientation.y = qy;
+            pose_msg.pose.orientation.z = qz;
+            pose_msg.pose.orientation.w = qw;
+
+            // 返回 TransformPacket
+            return TransformPacket(pose_msg);
+        }
+
+        // 静态函数：从 TransformPacket 提取 rvec 和 tvec
+        static void extractRvecTvec(const TransformPacket& packet, cv::Vec3d& rvec, cv::Vec3d& tvec) {
+            // 提取平移向量
+            tvec[0] = packet.pose.pose.position.x;
+            tvec[1] = packet.pose.pose.position.y;
+            tvec[2] = packet.pose.pose.position.z;
+
+            // 提取四元数
+            double qx = packet.pose.pose.orientation.x;
+            double qy = packet.pose.pose.orientation.y;
+            double qz = packet.pose.pose.orientation.z;
+            double qw = packet.pose.pose.orientation.w;
+
+            // 将四元数转换为旋转矩阵
+            cv::Matx33d R(
+                1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qw * qz), 2 * (qx * qz + qw * qy),
+                2 * (qx * qy + qw * qz), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qw * qx),
+                2 * (qx * qz - qw * qy), 2 * (qy * qz + qw * qx), 1 - 2 * (qx * qx + qy * qy)
+            );
+
+            // 将旋转矩阵转换为旋转向量
+            cv::Rodrigues(R, rvec);
+        }
+    };
+
+    class TransformSubscriber {
+    public:
+        TransformSubscriber(ros::NodeHandle& nh, size_t queue_size)
+            : nh_(nh), queue_size_(queue_size) {}
+
+        void addTopic(const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            ros::Subscriber sub = nh_.subscribe<geometry_msgs::PoseStamped>(
+                topic, 1,
+                boost::bind(&TransformSubscriber::TransformCallback, this, _1, topic)
+            );
+            subscribers_.emplace_back(sub);
+            ROS_INFO("Subscribed to Transform topic: %s", topic.c_str());
+        }
+
+        void addTopics(const std::vector<std::string>& topics) {
+            for (const auto& topic : topics) {
+                addTopic(topic);
+            }
+        }
+
+        TransformPacket getTransform(const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = transform_queues_.find(topic);
+            if (it != transform_queues_.end() && !it->second.empty()) {
+                TransformPacket packet = std::move(it->second.front());
+                it->second.pop();
+                return packet;
+            }
+            return TransformPacket();
+        }
+
+        // 提取 rvec 和 tvec
+        bool getRvecTvec(const std::string& topic, cv::Vec3d& rvec, cv::Vec3d& tvec) {
+            TransformPacket packet = getTransform(topic);
+            if (packet) {
+                TransformUtils::extractRvecTvec(packet, rvec, tvec);
+                return true;
+            }
+            return false;
+        }
+
+    private:
+        void TransformCallback(const geometry_msgs::PoseStamped::ConstPtr& msg, const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (transform_queues_[topic].size() >= queue_size_) {
+                transform_queues_[topic].pop();
+            }
+            transform_queues_[topic].emplace(*msg);
+        }
+
+        ros::NodeHandle nh_;
+        std::vector<ros::Subscriber> subscribers_;
+        std::map<std::string, std::queue<TransformPacket>> transform_queues_;
+        std::mutex mutex_;
+        size_t queue_size_;
+    };
+
+    class TransformPublisher {
+    public:
+        TransformPublisher(ros::NodeHandle& nh) : nh_(nh) {}
+
+        void addTopic(const std::string& topic, size_t queue_size) {
+            pub_[topic] = nh_.advertise<geometry_msgs::PoseStamped>(topic, queue_size);
+            ROS_INFO("TransformPublisher added for topic: %s", topic.c_str());
+        }
+
+        void addTopics(const std::vector<std::string>& topics, size_t queue_size) {
+            for (const std::string& topic : topics) {
+                addTopic(topic, queue_size);
+            }
+        }
+
+        void publish(const std::string& topic, const TransformPacket& transform_packet) {
+            auto it = pub_.find(topic);
+            if (it != pub_.end() && transform_packet) {
+                geometry_msgs::PoseStamped pose_msg = transform_packet.pose;
+                pose_msg.header.stamp = ros::Time::now();  // 设置时间戳
+                it->second.publish(pose_msg);
+                ROS_INFO("Published Transform to topic: %s", topic.c_str());
             } else {
                 ROS_WARN("No publisher available for topic: %s", topic.c_str());
             }

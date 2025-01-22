@@ -353,8 +353,7 @@ int main(int argc, char *argv[])
         // if(command_received == "capture_border")
         // {
             
-        //     std::vector<geometry_msgs::Point32> img_corners_rcv = img_corners_SUB_PUB.getCornersPoints32();
-        //     std::vector<geometry_msgs::Point32> pc_corners_rcv = pc_corners_SUB_PUB.getCornersPoints32();
+        //     CornersPacket rcv_pc_corners_packet = cor_sub.getCorners(topic_pc_corners_sub);
         //     pc_process.setCloud(pc_SUB_PUB.getPointcloudXYZI());
         //     pc_process.boxFilter(Eigen::Vector3f(center_x, center_y, center_z), length_x, length_y, length_z, rotate_x, rotate_y, rotate_z);
         //     pc_process.normalClusterExtraction();

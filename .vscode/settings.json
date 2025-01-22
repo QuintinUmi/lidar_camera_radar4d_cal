@@ -82,6 +82,9 @@
         "*.tpp": "cpp",
         "thread": "cpp",
         "dense": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "bit": "cpp"
     }
 }
