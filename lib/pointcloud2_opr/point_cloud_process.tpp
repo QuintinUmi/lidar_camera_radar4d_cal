@@ -89,7 +89,7 @@ namespace lidar_camera_cal::pointcloud2_opr
         this->processedCloudUpdate(this->raw_cloud);
         this->removeOriginPoint();
 
-        this->tree = pcl::search::Search<pcl::PointXYZI>::Ptr(new pcl::search::KdTree<pcl::PointXYZI>);
+        this->tree = typename pcl::search::Search<PointT>::Ptr(new pcl::search::KdTree<PointT>);
         this->normals = boost::shared_ptr<pcl::PointCloud<pcl::Normal>>(new pcl::PointCloud<pcl::Normal>),
         this->plane_coefficients = pcl::ModelCoefficients::Ptr(new pcl::ModelCoefficients);
         this->rect_corners_3d = typename pcl::PointCloud<PointT>::Ptr(new typename pcl::PointCloud<PointT>);
@@ -192,7 +192,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     void PointCloud2Proc<PointT>::PassThroughFilter(std::string axis, float min, float max)
     {
-        pcl::PassThrough<pcl::PointXYZI> pass;
+        pcl::PassThrough<PointT> pass;
         pass.setInputCloud(this->processed_cloud);          
         pass.setFilterFieldName(axis);      
         pass.setFilterLimits(min, max); 
@@ -206,7 +206,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     void PointCloud2Proc<PointT>::boxFilter(Eigen::Vector4f min_point, Eigen::Vector4f max_point, bool negetive)
     {
-        pcl::CropBox<pcl::PointXYZI> boxFilter;
+        pcl::CropBox<PointT> boxFilter;
         typename pcl::PointCloud<PointT>::Ptr tempCloud(new typename pcl::PointCloud<PointT>);
         boxFilter.setInputCloud(this->processed_cloud);
         boxFilter.setMin(min_point);
@@ -222,7 +222,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     void PointCloud2Proc<PointT>::boxFilter(Eigen::Vector3f box_center, float length_x, float length_y, float length_z,
                                     float angle_x, float angle_y, float angle_z, bool negetive)
     {
-        pcl::CropBox<pcl::PointXYZI> boxFilter;
+        pcl::CropBox<PointT> boxFilter;
 
         boxFilter.setMin(Eigen::Vector4f(-length_x/2, -length_y/2, -length_z/2, 1.0));
         boxFilter.setMax(Eigen::Vector4f(length_x/2, length_y/2, length_z/2, 1.0));
@@ -253,7 +253,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         this->computeNormals(k_search);
 
-        pcl::RegionGrowing<pcl::PointXYZI, pcl::Normal> reg;
+        pcl::RegionGrowing<PointT, pcl::Normal> reg;
         reg.setMinClusterSize(min_cluster_size);  
         reg.setMaxClusterSize(max_cluster_size);  
         reg.setSearchMethod(this->tree);    
@@ -274,7 +274,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         this->computeNormals(k_search);
 
-        pcl::RegionGrowing<pcl::PointXYZI, pcl::Normal> reg;
+        pcl::RegionGrowing<PointT, pcl::Normal> reg;
         reg.setMinClusterSize(min_cluster_size);  
         reg.setMaxClusterSize(max_cluster_size);  
         reg.setSearchMethod(this->tree);    
@@ -304,7 +304,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     int PointCloud2Proc<PointT>::statisticalOutlierFilter(int mean_k, float stddev_mul)
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_filtered(new typename pcl::PointCloud<PointT>);
-        pcl::StatisticalOutlierRemoval<pcl::PointXYZI> sor;
+        pcl::StatisticalOutlierRemoval<PointT> sor;
         pcl::Indices indices;
         
         sor.setInputCloud(this->processed_cloud);
@@ -328,14 +328,14 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     pcl::PointIndices PointCloud2Proc<PointT>::planeSegmentation(float distance_threshold, int max_iterations)
     {
-        pcl::SACSegmentation<pcl::PointXYZI> seg;
+        pcl::SACSegmentation<PointT> seg;
         seg.setOptimizeCoefficients(true); 
         seg.setModelType(pcl::SACMODEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
         seg.setMaxIterations(max_iterations);        
         seg.setDistanceThreshold(distance_threshold);    
 
-        pcl::ExtractIndices<pcl::PointXYZI> extract;
+        pcl::ExtractIndices<PointT> extract;
         typename pcl::PointCloud<PointT>::Ptr cloud_plane(new typename pcl::PointCloud<PointT>);
 
         pcl::PointIndices inliers_;
@@ -381,7 +381,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<pcl::PointXYZI> proj;
+        pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(this->plane_coefficients);
@@ -396,7 +396,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<pcl::PointXYZI> proj;
+        pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(plane_coefficients);
@@ -419,7 +419,7 @@ namespace lidar_camera_cal::pointcloud2_opr
 
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<pcl::PointXYZI> proj;
+        pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(plane_coefficients);
@@ -612,7 +612,7 @@ namespace lidar_camera_cal::pointcloud2_opr
         for (int i = 0; i < 4; i++) {
             Eigen::Vector4f pt_2d(this->rect_corners_2d[i].x, this->rect_corners_2d[i].y, 0, 1);
             Eigen::Vector4f pt_3d = this->pca_transform_matrix.inverse() * pt_2d;
-            pcl::PointXYZI point_3d;
+            PointT point_3d;
             point_3d.x = pt_3d[0];
             point_3d.y = pt_3d[1];
             point_3d.z = pt_3d[2];
@@ -628,7 +628,7 @@ namespace lidar_camera_cal::pointcloud2_opr
         for (int i = 0; i < 4; i++) {
             Eigen::Vector4f pt_2d(this->rect_corners_2d[i].x, this->rect_corners_2d[i].y, 0, 1);
             Eigen::Vector4f pt_3d = transform_matrix * pt_2d;
-            pcl::PointXYZI point_3d;
+            PointT point_3d;
             point_3d.x = pt_3d[0];
             point_3d.y = pt_3d[1];
             point_3d.z = pt_3d[2];
@@ -719,7 +719,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr corners(new typename pcl::PointCloud<PointT>);
 
-        pcl::PointXYZI point;
+        PointT point;
 
         point.x = min_point.x(); point.y = min_point.y(); point.z = min_point.z(); point.intensity = 0;
         corners->emplace_back(point);
@@ -777,7 +777,7 @@ namespace lidar_camera_cal::pointcloud2_opr
         for (const auto& corner_at_origin : corners_at_origin) 
         {
             Eigen::Vector3f transformed_corner = transform * corner_at_origin; 
-            pcl::PointXYZI point;
+            PointT point;
             point.x = transformed_corner.x(); point.y = transformed_corner.y(); point.z = transformed_corner.z(); point.intensity = 0.0; 
             corners->emplace_back(point);
         }
@@ -789,7 +789,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     pcl::PointCloud<pcl::Normal>::Ptr PointCloud2Proc<PointT>::computeNormals(int k_search)
     {
         // pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-        pcl::NormalEstimation<pcl::PointXYZI, pcl::Normal> normal_estimator;
+        pcl::NormalEstimation<PointT, pcl::Normal> normal_estimator;
         normal_estimator.setSearchMethod(this->tree);
         normal_estimator.setInputCloud(this->processed_cloud);
         normal_estimator.setKSearch(k_search);
@@ -829,7 +829,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     void PointCloud2Proc<PointT>::computePCAMatrix(Eigen::Matrix3f& eigen_vector, Eigen::Vector4f& mean_vector)
     {
-        pcl::PCA<pcl::PointXYZI> pca;
+        pcl::PCA<PointT> pca;
         pca.setInputCloud(this->processed_cloud);
         eigen_vector = pca.getEigenVectors();
         mean_vector = pca.getMean();
@@ -879,7 +879,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     void PointCloud2Proc<PointT>::sortPointByNormal(typename pcl::PointCloud<PointT>::Ptr points, const Eigen::Vector3f& normal)
     {
-        pcl::PointXYZI center;
+        PointT center;
         for (const auto& p : points->points) {
             center.x += p.x;
             center.y += p.y;
@@ -940,7 +940,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_hull(new typename pcl::PointCloud<PointT>);
 
-        pcl::ConcaveHull<pcl::PointXYZI> concave_hull;
+        pcl::ConcaveHull<PointT> concave_hull;
         concave_hull.setInputCloud(input_cloud);
         concave_hull.setAlpha(alpha);  
         concave_hull.reconstruct(*cloud_hull);
@@ -951,7 +951,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     typename pcl::PointCloud<PointT>::Ptr PointCloud2Proc<PointT>::calculateConvexHull(const typename pcl::PointCloud<PointT>::Ptr &input_cloud)
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_hull(new typename pcl::PointCloud<PointT>);
-        pcl::ConvexHull<pcl::PointXYZI> convex_hull;
+        pcl::ConvexHull<PointT> convex_hull;
         convex_hull.setInputCloud(input_cloud);
         convex_hull.reconstruct(*cloud_hull);
 

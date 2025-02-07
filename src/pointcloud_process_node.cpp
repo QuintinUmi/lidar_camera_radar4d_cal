@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	std::string topic_pc_sub;
     std::string topic_pc_pub;
     std::string topic_cor_pub;
-	rosHandle.param("frame_id", frame_id, std::string("livox_frame"));
+	rosHandle.param("frame_id", frame_id, std::string("velodyne"));
 	rosHandle.param("pointcloud_process_pc_sub_topic", topic_pc_sub, std::string("/rslidar_points"));
     rosHandle.param("pointcloud_process_pc_pub_topic", topic_pc_pub, std::string("/pointcloud_process/proc"));
     rosHandle.param("pointcloud_process_cor_pub_topic", topic_cor_pub, std::string("/pointcloud_process/corners"));

@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	rosHandle.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
     rosHandle.param("image_process_img_pub_topic", topic_img_pub, std::string("/image_process/proc"));
     rosHandle.param("image_process_cor_pub_topic", topic_cor_pub, std::string("/image_process/corners"));
-    rosHandle.param("image_process_cor_pub_topic", topic_trans_pub, std::string("/image_process/trans"));
+    rosHandle.param("image_process_trans_pub_topic", topic_trans_pub, std::string("/image_process/trans"));
 
 
     std::string package_path;

@@ -520,7 +520,7 @@ namespace lidar_camera_cal {
                 geometry_msgs::PoseStamped pose_msg = transform_packet.pose;
                 pose_msg.header.stamp = ros::Time::now();  // 设置时间戳
                 it->second.publish(pose_msg);
-                ROS_INFO("Published Transform to topic: %s", topic.c_str());
+                // ROS_INFO("Published Transform to topic: %s", topic.c_str());
             } else {
                 ROS_WARN("No publisher available for topic: %s", topic.c_str());
             }
