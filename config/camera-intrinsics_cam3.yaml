@@ -1,0 +1,44 @@
+%YAML:1.0
+---
+calibrationTimeChar: "Tue Feb 11 18:18:56 2025\n"
+calibrationTime_t: 1739269136
+imageWidth: 2200
+imageHeight: 1740
+cameraMatrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 1.1666884926889807e+03, 0., 1.1112737811770394e+03, 0.,
+       1.1665476805681587e+03, 8.4018511446190257e+02, 0., 0., 1. ]
+distCoeffs: !!opencv-matrix
+   rows: 1
+   cols: 4
+   dt: d
+   data: [ -8.8430979132921347e-02, 9.0133626188934279e-02,
+       6.5075234121334295e-05, -1.8440402086303512e-05 ]
+newCameraMatrixAlpha1: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 1.1404513654677492e+03, 0., 1.1103454776056431e+03, 0.,
+       1.1363442202709894e+03, 8.3989580597346276e+02, 0., 0., 1. ]
+newDisCoffesAlpha1: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ 2.2305892153829212e-04, -2.5278925874805760e-04,
+       1.0551782453160394e-05, 8.2661116167253094e-06,
+       -7.3038988927085174e-05 ]
+newCameraMatrixAlpha0: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 1.1604714403906391e+03, 0., 1.1102974502036204e+03, 0.,
+       1.1594419929454109e+03, 8.4095324567889452e+02, 0., 0., 1. ]
+newDistCoeffsAlpha0: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -1.5263852084310356e-04, 5.9867775908275275e-04,
+       2.7692412490117318e-05, 4.1756546850418116e-05,
+       -6.9860161162560593e-04 ]
