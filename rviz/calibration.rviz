@@ -14,7 +14,7 @@ Panels:
         - /Polygon2
         - /Axes1
       Splitter Ratio: 0.5
-    Tree Height: 270
+    Tree Height: 286
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -190,7 +190,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: rslidar
+    Fixed Frame: velodyne
     Frame Rate: 30
   Name: root
   Tools:
@@ -230,9 +230,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.20479801297187805
+      Pitch: 0.13479803502559662
       Target Frame: <Fixed Frame>
-      Yaw: 3.873540163040161
+      Yaw: 4.958550930023193
     Saved: ~
 Window Geometry:
   Displays:

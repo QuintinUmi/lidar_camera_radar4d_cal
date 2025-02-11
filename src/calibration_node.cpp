@@ -15,8 +15,11 @@
 #include <aruco/aruco.h>  
 #include "opencv2/aruco/charuco.hpp"  
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/SVD>
+
+#include <pcl/visualization/cloud_viewer.h> 
 
 #include <yaml-cpp/yaml.h>
 
@@ -26,6 +29,9 @@
 
 #include "image_opr/image_process.h"
 #include "image_opr/image_draw.h"
+
+#include "pointcloud2_opr/point_cloud_process.h"
+
 
 #include "pointcloud2_opr/point_cloud_process.h"
 
@@ -52,6 +58,47 @@ int fps(int deltaTime)
     return fps;
 }
 
+double computeReprojectionError(
+    const std::vector<cv::Point2f>& projected_points,  // 投影的激光雷达点（像素坐标）
+    const std::vector<cv::Point2f>& pixel_corners      // 标定板角点（像素坐标）
+) {
+    double total_error = 0.0;  // 总误差初始化为 0
+
+    // 遍历每个投影点
+    for (size_t i = 0; i < projected_points.size(); ++i) {
+        const cv::Point2f& projected_point = projected_points[i];  // 当前投影点
+
+        // 初始化最近点和最小距离
+        double min_distance = std::numeric_limits<double>::max();
+        cv::Point2f nearest_corner;
+
+        // 遍历所有标定板角点，找到最近的点
+        for (const auto& corner : pixel_corners) {
+            cv::Point2f image_corner(corner.x, corner.y);  // 转换为 2D 点
+            double distance = cv::norm(projected_point - image_corner);  // 计算距离
+
+            if (distance < min_distance) {
+                min_distance = distance;  // 更新最小距离
+                nearest_corner = image_corner;  // 更新最近点
+            }
+        }
+
+        // 记录误差
+        total_error += min_distance;
+
+        // 输出每个点的详细误差信息
+        std::cout << "Projected Point [" << i << "]: " << projected_point
+                  << ", Nearest Image Corner: " << nearest_corner
+                  << ", Error: " << min_distance << std::endl;
+    }
+
+    // 平均误差
+    double mean_error = total_error / projected_points.size();
+
+    // 返回平均误差
+    return mean_error;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -74,6 +121,8 @@ int main(int argc, char *argv[])
     std::string topic_img_corners_sub;
     std::string topic_corners_pub;
 
+    std::string topic_trans_sub;
+
     std::string topic_command_sub;
     std::string topic_command_pub;
 
@@ -90,8 +139,22 @@ int main(int argc, char *argv[])
     rosHandle.param("pointcloud_process_cor_pub_topic", topic_pc_corners_sub, std::string("/pointcloud_process/corners"));
     rosHandle.param("image_process_cor_pub_topic", topic_img_corners_sub, std::string("/image_process/corners"));
 
+    rosHandle.param("image_process_trans_pub_topic", topic_trans_sub, std::string("/image_process/trans"));
+
     rosHandle.param("calibration_command_sub_topic", topic_command_sub, std::string("/lidar_camera_cal/command_controller"));
     rosHandle.param("calibration_command_pub_topic", topic_command_pub, std::string("/lidar_camera_cal/command_cal_node"));
+
+
+    float caliboard_width;
+    float caliboard_height;
+    rosHandle.param("caliboard_width", caliboard_width, (float)12.0);
+    rosHandle.param("caliboard_height", caliboard_height, (float)12.0);
+
+    std::vector<cv::Point3f> image_corners;
+    image_corners.emplace_back(-caliboard_width/2, +caliboard_height/2, 0);
+    image_corners.emplace_back(+caliboard_width/2, +caliboard_height/2, 0);
+    image_corners.emplace_back(+caliboard_width/2, -caliboard_height/2, 0);
+    image_corners.emplace_back(-caliboard_width/2, -caliboard_height/2, 0);
 
 
     std::string packagePath;
@@ -167,6 +230,9 @@ int main(int argc, char *argv[])
     CornersPublisher cor_pub(rosHandle);
     cor_sub.addTopic(topic_pc_corners_sub);
     cor_sub.addTopic(topic_img_corners_sub);
+
+    TransformSubscriber transform_sub(rosHandle, 5);
+    transform_sub.addTopic(topic_trans_sub);
 
 
     PointCloud2Proc<pcl::PointXYZI> pc_process(true);
@@ -350,78 +416,64 @@ int main(int argc, char *argv[])
             command_handler.resetReceivedStatus();
         }
 
-        // if(command_received == "capture_border")
-        // {
+        if (command_received == "capture_border") {
+            // Step 1: 获取 rvec 和 tvec
+            cv::Vec3d rvec;
+            cv::Vec3d tvec;
+            CornersPacket rcv_pc_corners_packet = cor_sub.getCorners(topic_pc_corners_sub);
+            transform_sub.getRvecTvec(topic_trans_sub, rvec, tvec);
+
+            auto lidar_corners = rcv_pc_corners_packet.corners.polygon.points;
+
+            cv::Mat tvec_meters = cv::Mat(tvec);  
+            cv::Mat rvec_mat = cv::Mat(rvec);             
+
+            std::vector<cv::Point3f> lidar_corners_cv;
+            for (const auto& corner : lidar_corners) {
+                lidar_corners_cv.emplace_back(corner.x, corner.y, corner.z);
+            }
+
+            Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+            transform.linear() = R;
+            transform.translation() = t;
+            Eigen::Matrix4f transform_matrix = transform.matrix();
+
+            std::cout << transform_matrix << std::endl;
+
+            if (lidar_corners_cv.empty()) {
+                command_handler.sendCommand("capture_border_complete");
+                command_handler.resetReceivedStatus();
+                continue;
+            }
+
+            std::vector<cv::Point3f> trans_lidar_corners_cv;
+            for (const auto& point : lidar_corners_cv) {
+                Eigen::Vector4f lidar_point_homogeneous(point.x, point.y, point.z, 1.0f);
+
+                Eigen::Vector4f transformed_point_homogeneous = transform_matrix * lidar_point_homogeneous;
+
+                float x_mm = transformed_point_homogeneous.x();
+                float y_mm = transformed_point_homogeneous.y();
+                float z_mm = transformed_point_homogeneous.z();
+
+                trans_lidar_corners_cv.emplace_back(x_mm, y_mm, z_mm);
+            }
             
-        //     std::vector<geometry_msgs::Point32> img_corners_rcv = img_corners_SUB_PUB.getCornersPoints32();
-        //     std::vector<geometry_msgs::Point32> pc_corners_rcv = pc_corners_SUB_PUB.getCornersPoints32();
-        //     pc_process.setCloud(pc_SUB_PUB.getPointcloudXYZI());
-        //     pc_process.boxFilter(Eigen::Vector3f(center_x, center_y, center_z), length_x, length_y, length_z, rotate_x, rotate_y, rotate_z);
-        //     pc_process.normalClusterExtraction();
-        //     pc_process.extractNearestClusterCloud();
-        //     pc_process.planeSegmentation();
+            std::vector<cv::Point2f> projected_lidar_points;
+            cv::Vec3d rvec0(0, 0, 0); // 零旋转
+            cv::Vec3d tvec0(0, 0, 0); // 零平移
+            cv::projectPoints(trans_lidar_corners_cv, rvec0, tvec0, cameraMatrix, distCoeffs, projected_lidar_points);
 
-        //     // test caliboard_pc
-        //     PointCloud2Proc<pcl::PointXYZI> caliboard_pc_proc(true);
-        //     caliboard_pc_proc.setCloud(pc_process.getProcessedPointcloud());
-        //     caliboard_pc_proc.transform(R, t);
-        //     caliboard_pc_proc.scaleTo(1000.0f);
-        //     caliboard_pc_proc.PassThroughFilter("z", 0, 4000);
+            std::vector<cv::Point2f> pixel_corners;
+            cv::projectPoints(image_corners, rvec, tvec, cameraMatrix, distCoeffs, pixel_corners);
+            double mean_error = computeReprojectionError(projected_lidar_points, pixel_corners);
+            std::cout << "Mean Reprojection Error: " << mean_error << std::endl;
 
-        //     std::vector<cv::Point2f> caliboard_pc;
-        //     auto img_caliboard_pc = img_SUB_PUB.getImage();
-        //     image_draw.projectPointsToImage(*caliboard_pc_proc.getProcessedPointcloud(), caliboard_pc);
-        //     image_draw.drawPointsOnImageZ(*caliboard_pc_proc.getProcessedPointcloud(), caliboard_pc, img_caliboard_pc);
-        //     cv::imshow("caliboard_pc", img_caliboard_pc);
-        //     // test caliboard_pc //
-
-
-        //     pcl::PointCloud<pcl::PointXYZI>::Ptr hull_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-        //     pcl::copyPointCloud(*pc_process.calculateConcaveHull(pc_process.getProcessedPointcloud(), concave_hull_alpha), *hull_cloud);
-        //     CalTool::removeBoundingBoxOutliers<pcl::PointXYZI>(hull_cloud, pc_corners_rcv);
-        //     pc_process.setCloud(hull_cloud);
-
-        //     boarderset_csv_operator.writePointsToCSVAppend(hull_cloud, img_corners_rcv);
-
-
-        //     // pc_process.extractConvexHull();
-        //     pc_process.transform(R, t);
-        //     pc_process.scaleTo(1000.0f);
-        //     pc_process.PassThroughFilter("z", 0, 4000);
-
-        //     std::vector<cv::Point2f> imagePoints;
-        //     auto img_hull = img_SUB_PUB.getImage();
-        //     image_draw.projectPointsToImage(*pc_process.getProcessedPointcloud(), imagePoints);
-        //     image_draw.drawPointsOnImageZ(*pc_process.getProcessedPointcloud(), imagePoints, img_hull);
-
-
-        //     cv::imshow("concave_hull_cloud", img_hull);
-
-            
-
-        //     pcl::PointCloud<pcl::PointXYZI>::Ptr border_clouds(new pcl::PointCloud<pcl::PointXYZI>);
-        //     std::vector<std::vector<geometry_msgs::Point32>> image_corner_sets;
-        //     boarderset_csv_operator.readPointsFromCSV(border_clouds, image_corner_sets);
-        //     // double reprojection_error = CalTool::computeReprojectionErrors(hull_cloud, img_corners_raw, R, t, newCameraMatrix, newDisCoffes);
-        //     double pixel_mean_error, pixel_stddev_error;
-        //     CalTool::computeReprojectionErrorsInPixels<pcl::PointXYZI>(border_clouds, image_corner_sets, R, t, newCameraMatrix, newDisCoffes, pixel_mean_error, pixel_stddev_error);
-            
-
-        //     // std::cout << "Reprojection Errors = " << reprojection_error << " mm" << std::endl;
-        //     std::cout << "Reprojection Mean Errors In Pixels = " << pixel_mean_error << " pixels" << std::endl;
-        //     std::cout << "Reprojection Standard Deviation Errors In Pixels = " << pixel_stddev_error << " pixels" << std::endl;
-
-
-        //     command_handler.sendCommand("capture_border_complete");
-        //     command_handler.resetReceivedStatus();
-        // }
-
-
-
+            command_handler.sendCommand("capture_border_complete");
+            command_handler.resetReceivedStatus();
+        }
 
         if(key == 27) break;
-        
-        
 
         rate.sleep();
 

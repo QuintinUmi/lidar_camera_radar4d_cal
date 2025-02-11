@@ -54,12 +54,14 @@ int main(int argc, char *argv[])
     std::string topic_img_sub;
     std::string topic_img_pub;
     std::string topic_cor_pub;
+    std::string topic_trans_pub;
     rosHandle.param("undistort", undistort, false);
     rosHandle.param("undistort_mode", undistort_mode, 0);
-    rosHandle.param("frame_id", frame_id, std::string("rslidar"));
+    rosHandle.param("frame_id", frame_id, std::string("velodyne"));
 	rosHandle.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
     rosHandle.param("image_process_img_pub_topic", topic_img_pub, std::string("/image_process/proc"));
     rosHandle.param("image_process_cor_pub_topic", topic_cor_pub, std::string("/image_process/corners"));
+    rosHandle.param("image_process_trans_pub_topic", topic_trans_pub, std::string("/image_process/trans"));
 
 
     std::string package_path;
@@ -161,7 +163,10 @@ int main(int argc, char *argv[])
 
     CornersPublisher corners_pub(rosHandle);
     corners_pub.addTopic(topic_cor_pub, 5);
-    
+
+    TransformPublisher transform_pub(rosHandle);
+    transform_pub.addTopic(topic_trans_pub, 2);
+
 
     ros::Rate rate(50);
 
@@ -199,6 +204,8 @@ int main(int argc, char *argv[])
         cv::Vec3d rvec;
         cv::Vec3d tvec;
         ImageProc::estimateAveragePose(rvecs, tvecs, rvec, tvec);
+
+        transform_pub.publish(topic_trans_pub, TransformUtils::createTransformPacket(rvec, tvec, frame_id));
 
 
         std::vector<cv::Point3f> corners_plane;
