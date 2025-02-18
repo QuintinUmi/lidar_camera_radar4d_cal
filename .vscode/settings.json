@@ -85,6 +85,18 @@
         "chrono": "cpp",
         "cwchar": "cpp",
         "cwctype": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "strstream": "cpp",
+        "clocale": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "condition_variable": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "numeric": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "system_error": "cpp",
+        "typeindex": "cpp"
     }
 }

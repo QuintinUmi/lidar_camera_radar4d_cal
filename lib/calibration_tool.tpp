@@ -95,7 +95,7 @@ void CalTool::sortPointByNormalWorldFrame(typename pcl::PointCloud<PointT>::Ptr 
         std::rotate(angle_indices.begin(), angle_indices.begin() + 1, angle_indices.end());
     }
 
-    pcl::PointCloud<PointT> sorted_cloud;
+    typename pcl::PointCloud<PointT> sorted_cloud;
     for (const auto& angle_index : angle_indices) {
         sorted_cloud.push_back(points->points[angle_index.second]);
     }
@@ -269,7 +269,7 @@ void CalTool::sortPointByNormalImgFrame(typename pcl::PointCloud<PointT>::Ptr po
         std::rotate(angle_indices.begin(), angle_indices.begin() + 1, angle_indices.end());
     }
 
-    pcl::PointCloud<PointT> sorted_cloud;
+    typename pcl::PointCloud<PointT> sorted_cloud;
     for (const auto& angle_index : angle_indices) {
         sorted_cloud.push_back(points->points[angle_index.second]);
     }
@@ -548,7 +548,7 @@ void CalTool::removeBoundingBoxOutliers(typename pcl::PointCloud<PointT>::Ptr cl
     Eigen::Matrix3f eigen_vector;
     Eigen::Vector4f mean_vector;
 
-    pcl::PCA<PointT> pca;
+    typename pcl::PCA<PointT> pca;
     pca.setInputCloud(cloud);
     eigen_vector = pca.getEigenVectors();
     mean_vector = pca.getMean();
@@ -607,7 +607,7 @@ void CalTool::removeBoundingBoxOutliers(typename pcl::PointCloud<PointT>::Ptr cl
         }
     }
 
-    pcl::ExtractIndices<PointT> extract;
+    typename pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
     extract.setNegative(false);
