@@ -1,15 +1,15 @@
 undistort: false
 undistort_mode: 0
 
-# frame_id: "velodyne"
-frame_id: "hesai1"
+frame_id: "velodyne"
+# frame_id: "hesai1"
 
 image_process_img_sub_topic: /hikcamera/image_2/compressed
 image_process_img_pub_topic: /image_process/proc
 image_process_cor_pub_topic: /image_process/corners
 
-# pointcloud_process_pc_sub_topic: /velodyne_points
-pointcloud_process_pc_sub_topic: /lidar_points
+pointcloud_process_pc_sub_topic: /velodyne_points
+# pointcloud_process_pc_sub_topic: /lidar_points
 # pointcloud_process_pc_sub_topic: /merged_points
 pointcloud_process_pc_pub_topic: /pointcloud_process/proc
 pointcloud_process_cor_pub_topic: /pointcloud_process/corners

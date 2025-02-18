@@ -303,6 +303,8 @@ add_executable(controller_menu src/controller_menu.cpp)
 add_executable(lidar_cam_syn_fusion src/demo/lidar_cam_syn_fusion.cpp)
 add_executable(merge_points_pub src/demo/merge_points_pub.cpp)
 
+add_executable(boarder_capture src/demo/reprojection_error/boarder_capture.cpp)
+
 
 target_link_libraries(test1
   ${catkin_LIBRARIES}
@@ -389,6 +391,21 @@ target_link_libraries(merge_points_pub
 #   ${catkin_LIBRARIES}
 #   ${PCL_LIBRARIES}
 # )
+
+
+target_link_libraries(boarder_capture
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+  rviz_draw_lib
+  conversion_bridge_lib
+)
+
 
 #############
 ## Install ##

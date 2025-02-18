@@ -328,14 +328,14 @@ namespace lidar_camera_cal::pointcloud2_opr
     template<typename PointT>
     pcl::PointIndices PointCloud2Proc<PointT>::planeSegmentation(float distance_threshold, int max_iterations)
     {
-        pcl::SACSegmentation<PointT> seg;
+        typename pcl::SACSegmentation<PointT> seg;
         seg.setOptimizeCoefficients(true); 
         seg.setModelType(pcl::SACMODEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
         seg.setMaxIterations(max_iterations);        
         seg.setDistanceThreshold(distance_threshold);    
 
-        pcl::ExtractIndices<PointT> extract;
+        typename pcl::ExtractIndices<PointT> extract;
         typename pcl::PointCloud<PointT>::Ptr cloud_plane(new typename pcl::PointCloud<PointT>);
 
         pcl::PointIndices inliers_;
@@ -381,7 +381,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<PointT> proj;
+        typename pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(this->plane_coefficients);
@@ -396,7 +396,7 @@ namespace lidar_camera_cal::pointcloud2_opr
     {
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<PointT> proj;
+        typename pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(plane_coefficients);
@@ -419,7 +419,7 @@ namespace lidar_camera_cal::pointcloud2_opr
 
         typename pcl::PointCloud<PointT>::Ptr cloud_projected(new typename pcl::PointCloud<PointT>);
 
-        pcl::ProjectInliers<PointT> proj;
+        typename pcl::ProjectInliers<PointT> proj;
         proj.setModelType(pcl::SACMODEL_PLANE);
         proj.setInputCloud(this->processed_cloud);
         proj.setModelCoefficients(plane_coefficients);

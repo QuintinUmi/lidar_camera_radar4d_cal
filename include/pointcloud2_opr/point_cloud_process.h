@@ -145,12 +145,12 @@ namespace lidar_camera_cal {
             typename pcl::PointCloud<PointT>::Ptr no_cloud;
 
 
-            pcl::search::Search<pcl::PointXYZI>::Ptr tree;
+            typename pcl::search::Search<PointT>::Ptr tree;
 
         private:
             bool remove_origin_point_;
             int k_search_;
-            pcl::search::Search<pcl::PointXYZI>::Ptr search_method_;
+            typename pcl::search::Search<PointT>::Ptr search_method_;
 
             bool isPointInQuad(const cv::Point2f testCorners[4], const cv::Point2f& P) 
             {
