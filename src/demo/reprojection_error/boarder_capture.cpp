@@ -146,7 +146,7 @@ double pointToLineDistance(const cv::Point2f& point, const cv::Point2f& line_sta
 double computeReprojectionError(
     const std::vector<cv::Point2f>& imagePoints,          // Lidar 点云投影到图像上的边缘点
     const std::vector<std::vector<cv::Point2f>>& p2ds,    // ArUco 检测出的边框边缘点（交点集合）
-    double outlier_threshold = 6.0) {                    // 离群点阈值（默认值为 10 像素）
+    double outlier_threshold = 10.0) {                    // 离群点阈值（默认值为 10 像素）
     
     double total_error = 0.0;
     int num_points = 0;
@@ -653,7 +653,7 @@ int main(int argc, char *argv[])
     } else {
         arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     }
-    arucos.setDetectionParameters(3);
+    arucos.setDetectionParameters(1);
     arucos.create();
 
     ImageDraw image_draw;
@@ -775,17 +775,20 @@ int main(int argc, char *argv[])
 			rviz_draw.addLine("box_line_middle4", ros_box_corners.at(3), ros_box_corners.at(3 + 4), 0.05, 1.0, 1.0, 0.0);
 		}
 
+        rviz_draw.publish();
+
         auto rcv_image_packet = image_sub.getImage(topic_img_sub);
 
         if(!rcv_image_packet) {
-            // ROS_INFO("Waiting For Image Subscribe\n");
+            ROS_INFO("Waiting For Image Subscribe\n");
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
         rcv_image_packet.frame_id = frame_id;
+        // ROS_WARN("Img Rcv t: %ld", rcv_image_packet.timestamp);
 
         cv::Mat proc_image;
-        if (undistort && false) {
+        if (undistort) {
             cv::remap(*rcv_image_packet.image, proc_image, map1, map2, cv::INTER_LINEAR);
         } else {
             proc_image = *rcv_image_packet.image;
@@ -804,6 +807,67 @@ int main(int argc, char *argv[])
         cv::Vec3d rvec;
         cv::Vec3d tvec;
         ImageProc::estimateAveragePose(rvecs, tvecs, rvec, tvec);
+        
+        std::vector<cv::Point3f> corners_plane;
+        std::vector<cv::Point3f> corners_3d;
+        cv::Point3f center;
+        if(use_center_aruco) {
+            
+            int center_index = -1;
+            for (int i = 0; i < detectedIds.size(); i ++) {
+                if (detectedIds[i] == center_id) {
+                    center_index = i;
+                }
+            }
+            if (center_index == -1) {
+
+                image_pub.publish(topic_img_pub, rcv_image_packet);
+                ROS_INFO("Not Detected Center Marker!\n");
+                continue;
+            }
+            
+            center.x = tvecs[center_index][0];
+            center.y = tvecs[center_index][1];
+            center.z = tvecs[center_index][2];
+
+            
+            corners_plane.emplace_back(-caliboard_width/2 * 1000, +caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(+caliboard_width/2 * 1000, +caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(+caliboard_width/2 * 1000, -caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(-caliboard_width/2 * 1000, -caliboard_height/2 * 1000, 0);
+
+            ImageProc::transform3dPoints(corners_plane, corners_3d, rvec, tvec);
+
+            image_draw.drawOrthoCoordinate2d(proc_image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
+            image_draw.drawLine2d(proc_image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvecs[center_index]), cv::Scalar(0, 0, 255));
+
+        }
+        else
+        {
+            
+            center.x = tvec[0];
+            center.y = tvec[1];
+            center.z = tvec[2];
+
+            
+            corners_plane.emplace_back(-caliboard_width/2 * 1000, +caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(+caliboard_width/2 * 1000, +caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(+caliboard_width/2 * 1000, -caliboard_height/2 * 1000, 0);
+            corners_plane.emplace_back(-caliboard_width/2 * 1000, -caliboard_height/2 * 1000, 0);
+
+            ImageProc::transform3dPoints(corners_plane, corners_3d, rvec, tvec);
+
+            image_draw.drawOrthoCoordinate2d(proc_image, ConversionBridge::rvecs3dToMat_d(rvecs), ConversionBridge::rvecs3dToMat_d(tvecs));
+            image_draw.drawLine2d(proc_image, corners_plane[0], corners_plane[1], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[1], corners_plane[2], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[2], corners_plane[3], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            image_draw.drawLine2d(proc_image, corners_plane[3], corners_plane[0], cv::Mat(rvec), cv::Mat(tvec), cv::Scalar(0, 0, 255));
+            
+        }
+        // std::cout << rvec << tvec << corners_plane << std::endl;
 
         if(pc_process.normalClusterExtraction().size() == 0)
         {
@@ -826,13 +890,19 @@ int main(int argc, char *argv[])
 
         std::vector<cv::Point2f> imagePoints;
         image_draw.projectPointsToImage(*pc_reproject.getProcessedPointcloud(), imagePoints);
-        image_draw.drawPointsOnImageIntensity(*pc_reproject.getProcessedPointcloud(), imagePoints, proc_image);
+        static float min_intensity = 0;
+        static float max_intensity = 70;
+        for (size_t i = 0; i < imagePoints.size(); i++) 
+        {
+            cv::Scalar color = ImageDraw::intensityToRainbowColor(pc_reproject.getProcessedPointcloud()->points[i].intensity, min_intensity, max_intensity);
+            cv::circle(proc_image, imagePoints[i], 8, color, -1);
+        }
+
+        rcv_image_packet.image = std::make_shared<cv::Mat>(proc_image);
+        image_pub.publish(topic_img_pub, rcv_image_packet);
 
         vector<vector<cv::Point2f>> p2ds;
 
-        std::vector<cv::Point3f> corners_plane;
-        std::vector<cv::Point3f> corners_3d;
-        cv::Point3f center;
         if(use_center_aruco) {
             
             int center_index = -1;
@@ -906,10 +976,10 @@ int main(int argc, char *argv[])
             double reprojection_error = computeReprojectionError(imagePoints, p2ds);
             // std::cout << "Reprojection Error: " << reprojection_error << std::endl;
 
-            std::string filename = "data/reprojection_error_anaylysis.txt";
+            std::string filename = "data/reprojection_error_anaylysis";
 
             // 读取历史数据
-            std::vector<double> errors = loadReprojectionErrorData(filename);
+            std::vector<double> errors = loadReprojectionErrorData(filename + std::string(".txt"));
 
             // 打印历史数据
             std::cout << "Loaded historical reprojection errors: ";
@@ -923,7 +993,9 @@ int main(int argc, char *argv[])
                 errors.push_back(reprojection_error);
 
                 // 保存更新后的数据
-                saveReprojectionErrorData(filename, errors);
+                saveReprojectionErrorData(filename + std::string(".txt"), errors);
+
+                cv::imwrite(filename + std::string("_") + std::to_string(errors.size()) + std::string(".png"), proc_image);
             }
 
             // 计算新的平均误差

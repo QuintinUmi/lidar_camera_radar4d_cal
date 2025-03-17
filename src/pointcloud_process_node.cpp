@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 		setShareParam(rosHandle, rqtCfg);
 
 		pc_pub.publish(topic_pc_pub, PointCloudPacket(*pc_process.getProcessedPointcloud(), frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
-
+		
 		if(filterRecfg.isUpdated())
 		{
 			pcl::PointCloud<pcl::PointXYZI>::Ptr box_corners(new pcl::PointCloud<pcl::PointXYZI>);

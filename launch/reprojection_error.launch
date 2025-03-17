@@ -16,6 +16,6 @@
     <node pkg="lidar_camera_cal" type="boarder_capture" name="boarder_capture" output="screen"/>
     <node pkg="lidar_camera_cal" type="controller_menu" name="controller_menu" output="screen"  launch-prefix="gnome-terminal -- /bin/sh -c"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/calibration.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/reprojection.rviz" output="screen"/>
     
 </launch>

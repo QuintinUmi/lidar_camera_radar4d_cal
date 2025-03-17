@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     } else {
         arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     }
-    arucos.setDetectionParameters(3);
+    arucos.setDetectionParameters(1);
     arucos.create();
 
     ImageDraw image_draw;
@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
             continue;
         }
         rcv_image_packet.frame_id = frame_id;
+        // ROS_WARN("Img Rcv t: %ld", rcv_image_packet.timestamp);
 
         cv::Mat proc_image;
         if (undistort) {
