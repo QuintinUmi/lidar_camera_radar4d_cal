@@ -138,10 +138,10 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 
-find_library(APRILTAG_LIB apriltag)
-if(NOT APRILTAG_LIB)
-    message(FATAL_ERROR "AprilTag library not found")
-endif()
+# find_library(APRILTAG_LIB apriltag)
+# if(NOT APRILTAG_LIB)
+#     message(FATAL_ERROR "AprilTag library not found")
+# endif()
 
 include_directories(
   include
