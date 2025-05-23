@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     std::string topic_img_sub;
     std::string topic_img_pub;
     std::string topic_cor_pub;
+    std::string topic_cen_pub;
     std::string topic_trans_pub;
     rosHandle.param("undistort", undistort, false);
     rosHandle.param("undistort_mode", undistort_mode, 0);
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
 	rosHandle.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
     rosHandle.param("image_process_img_pub_topic", topic_img_pub, std::string("/image_process/proc"));
     rosHandle.param("image_process_cor_pub_topic", topic_cor_pub, std::string("/image_process/corners"));
+    rosHandle.param("image_process_cen_pub_topic", topic_cen_pub, std::string("/image_process/center"));
     rosHandle.param("image_process_trans_pub_topic", topic_trans_pub, std::string("/image_process/trans"));
 
 
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
     } else {
         arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     }
-    arucos.setDetectionParameters(1);
+    arucos.setDetectionParameters(3);
     arucos.create();
 
     ImageDraw image_draw;
@@ -161,8 +163,9 @@ int main(int argc, char *argv[])
     image_sub.addTopic(topic_img_sub);
     image_pub.addTopic(topic_img_pub, 5);
 
-    CornersPublisher corners_pub(rosHandle);
+    PointsetPublisher corners_pub(rosHandle);
     corners_pub.addTopic(topic_cor_pub, 5);
+    corners_pub.addTopic(topic_cen_pub, 5);
 
     TransformPublisher transform_pub(rosHandle);
     transform_pub.addTopic(topic_trans_pub, 2);
@@ -300,7 +303,17 @@ int main(int argc, char *argv[])
 			ros_corners.polygon.points.push_back(ros_point);
     	}
 
+        geometry_msgs::PolygonStamped ros_center;
+        {
+            geometry_msgs::Point32 ros_point;
+            ros_point.x = center.x / 1000;
+			ros_point.y = center.y / 1000;
+			ros_point.z = center.z / 1000;
+            ros_center.polygon.points.push_back(ros_point);
+        }
+        
         corners_pub.publish(topic_cor_pub, CornersPacket(ros_corners, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
+        corners_pub.publish(topic_cen_pub, CornersPacket(ros_center, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
 
         rviz_draw.addText("corner_1", CBridge::rosPoint32ToPoint(ros_corners.polygon.points.at(0)), "1", 0.3, 1.0, 0.0, 0.0);
         rviz_draw.addText("corner_2", CBridge::rosPoint32ToPoint(ros_corners.polygon.points.at(1)), "2", 0.3, 1.0, 0.0, 0.0);

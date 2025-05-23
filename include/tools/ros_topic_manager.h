@@ -284,16 +284,16 @@ namespace lidar_camera_cal {
             : corners(corners), frame_id(frame_id), seq(seq), timestamp(timestamp), is_valid(true) {}
     };
 
-    class CornersSubscriber {
+    class PointsetSubscriber {
     public:
-        CornersSubscriber(ros::NodeHandle& nh, size_t queue_size)
+        PointsetSubscriber(ros::NodeHandle& nh, size_t queue_size)
             : nh_(nh), queue_size_(queue_size) {}
 
         void addTopic(const std::string& topic) {
             std::lock_guard<std::mutex> lock(mutex_);
             ros::Subscriber sub = nh_.subscribe<geometry_msgs::PolygonStamped>(
                 topic, 1, 
-                boost::bind(&CornersSubscriber::CornersCallback, this, _1, topic)
+                boost::bind(&PointsetSubscriber::CornersCallback, this, _1, topic)
             );
             subscribers_.emplace_back(sub);
             if (SHOW_DEBUG_MESSAGE) ROS_INFO("Subscribed to Corners topic: %s", topic.c_str());
@@ -334,13 +334,13 @@ namespace lidar_camera_cal {
     };
 
 
-    class CornersPublisher {
+    class PointsetPublisher {
     public:
-        CornersPublisher(ros::NodeHandle& nh) : nh_(nh) {}
+        PointsetPublisher(ros::NodeHandle& nh) : nh_(nh) {}
 
         void addTopic(const std::string& topic, size_t queue_size) {
             pub_[topic] = nh_.advertise<geometry_msgs::PolygonStamped>(topic, queue_size);
-            if (SHOW_DEBUG_MESSAGE) ROS_INFO("CornersPublisher added for topic: %s", topic.c_str());
+            if (SHOW_DEBUG_MESSAGE) ROS_INFO("PointsetPublisher added for topic: %s", topic.c_str());
         }
 
         void addTopics(const std::vector<std::string>& topics, size_t queue_size) {

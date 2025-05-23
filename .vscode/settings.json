@@ -97,6 +97,24 @@
         "ranges": "cpp",
         "stop_token": "cpp",
         "system_error": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "any": "cpp",
+        "cfenv": "cpp",
+        "charconv": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "cuchar": "cpp",
+        "netfwd": "cpp",
+        "random": "cpp",
+        "regex": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "future": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "valarray": "cpp",
+        "filesystem": "cpp"
     }
 }

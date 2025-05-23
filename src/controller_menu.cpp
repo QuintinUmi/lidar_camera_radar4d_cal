@@ -205,9 +205,9 @@ int main(int argc, char **argv)
 
                     if (!group1.empty()) {
                         cornerset_csv_operator.deleteRowFromCSV(group1.size()-0);
-                        cornerset_csv_operator.deleteRowFromCSV(group1.size()-1);
-                        cornerset_csv_operator.deleteRowFromCSV(group1.size()-2);
-                        cornerset_csv_operator.deleteRowFromCSV(group1.size()-3);
+                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-1);
+                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-2);
+                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-3);
                     }
                     int cls_status = system("clear");
                     group1.clear();
