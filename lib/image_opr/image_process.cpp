@@ -200,16 +200,14 @@ Eigen::Quaterniond ImageProc::averageQuaternions(const std::vector<Eigen::Quater
 
     int max_index = 0;
     double max_eigen_values = eigen_values(0);
-    for(int i = 1; i <= 4; i++)
-    {
-        if(eigen_values(i) > max_eigen_values) 
-        {
+    for (int i = 1; i < 4; i++) {  
+        if (eigen_values(i) > max_eigen_values) {
             max_eigen_values = eigen_values(i);
             max_index = i;
         }
     }
-
     Eigen::Vector4d max_eigen_vector = eigen_vectors.col(max_index);
+    
 
     return Eigen::Quaterniond(max_eigen_vector(0), max_eigen_vector(1), max_eigen_vector(2), max_eigen_vector(3)).normalized();
 }

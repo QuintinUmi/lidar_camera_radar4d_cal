@@ -64,10 +64,12 @@ int main(int argc, char *argv[])
 	std::string topic_pc_sub;
     std::string topic_pc_pub;
     std::string topic_cor_pub;
+    std::string topic_cen_pub;
 	rosHandle.param("frame_id", frame_id, std::string("velodyne"));
 	rosHandle.param("pointcloud_process_pc_sub_topic", topic_pc_sub, std::string("/rslidar_points"));
     rosHandle.param("pointcloud_process_pc_pub_topic", topic_pc_pub, std::string("/pointcloud_process/proc"));
     rosHandle.param("pointcloud_process_cor_pub_topic", topic_cor_pub, std::string("/pointcloud_process/corners"));
+    rosHandle.param("pointcloud_process_cen_pub_topic", topic_cen_pub, std::string("/pointcloud_process/center"));
 
 
 	float caliboard_width;
@@ -87,8 +89,9 @@ int main(int argc, char *argv[])
     RQTConfig rqtCfg;
 	RvizDraw rviz_draw("pointcloud_process_node/rviz_draw", frame_id);
 
-	CornersPublisher cor_pub(rosHandle);
-	cor_pub.addTopic(topic_cor_pub, 10);
+	PointsetPublisher pts_pub(rosHandle);
+	pts_pub.addTopic(topic_cor_pub, 10);
+	pts_pub.addTopic(topic_cen_pub, 10);
 
 	ros::Rate rate(30);
 
@@ -155,10 +158,11 @@ int main(int argc, char *argv[])
 		
 		// Detect caliboard corners
 		pcl::PointCloud<pcl::PointXYZI>::Ptr corners;
-		corners = pc_process.extractNearestRectangleCorners(false, PointCloud2Proc<pcl::PointXYZI>::OptimizationMethod::None, caliboard_width, caliboard_height, 0.05);
+		corners = pc_process.extractNearestRectangleCorners(false, PointCloud2Proc<pcl::PointXYZI>::OptimizationMethod::AngleAtCentroid, caliboard_width, caliboard_height, 0.05);
 		CalTool::sortPointByNormalWorldFrame<pcl::PointXYZI>(corners, pc_process.getPlaneNormals());
 
 		geometry_msgs::PolygonStamped ros_corners;
+		geometry_msgs::Point32 ros_center_accum{};
 		for (const auto& corner : *corners) 
 		{
 			geometry_msgs::Point32 ros_point;
@@ -166,10 +170,24 @@ int main(int argc, char *argv[])
 			ros_point.y = corner.y;
 			ros_point.z = corner.z;
 			ros_corners.polygon.points.push_back(ros_point);
+
+			ros_center_accum.x += ros_point.x;
+			ros_center_accum.y += ros_point.y;
+			ros_center_accum.z += ros_point.z;
     	}
 
+		geometry_msgs::PolygonStamped ros_center;
+        {
+            geometry_msgs::Point32 ros_point;
+            ros_point.x = ros_center_accum.x / corners->size();
+			ros_point.y = ros_center_accum.y / corners->size();
+			ros_point.z = ros_center_accum.z / corners->size();
+            ros_center.polygon.points.push_back(ros_point);
+        }
+
 		std_msgs::Header header;
-		cor_pub.publish(topic_cor_pub, CornersPacket(ros_corners, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+		pts_pub.publish(topic_cor_pub, CornersPacket(ros_corners, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+		pts_pub.publish(topic_cen_pub, CornersPacket(ros_center, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 		
 
 		if(corners->size() == 0)

@@ -4,15 +4,17 @@ undistort_mode: 0
 frame_id: "velodyne"
 # frame_id: "hesai1"
 
-image_process_img_sub_topic: /hikcamera/image_6/compressed
+image_process_img_sub_topic: /hikcamera/image_2/compressed
 image_process_img_pub_topic: /image_process/proc
 image_process_cor_pub_topic: /image_process/corners
+image_process_cen_pub_topic: /image_process/center
 
 pointcloud_process_pc_sub_topic: /velodyne_points
 # pointcloud_process_pc_sub_topic: /lidar_points
 # pointcloud_process_pc_sub_topic: /merged_points
 pointcloud_process_pc_pub_topic: /pointcloud_process/proc
 pointcloud_process_cor_pub_topic: /pointcloud_process/corners
+pointcloud_process_cen_pub_topic: /pointcloud_process/center
 
 calibration_img_pub_topic: /lidar_camera_cal/image/proc
 calibration_command_sub_topic: /lidar_camera_cal/command_controller
@@ -22,4 +24,10 @@ image_process_trans_pub_topic: /image_process/trans
 
 pointset_save_path: data/point_set.csv
 error_analysis_save_path: data/border_error_anaylysis.csv
-extrinsics_save_path: config/extrinsics.yaml
+extrinsics_save_path: result/extrinsics.yaml
+# ll_extrinsics_save_path: result/lidar_lidar_extrinsics.yaml
+# lc_extrinsics_save_path: result/lidar_camera_extrinsics.yaml
+# lr_extrinsics_save_path: result/lidar_radar_extrinsics.yaml
+# cc_extrinsics_save_path: result/camera_camera_extrinsics.yaml
+# cr_extrinsics_save_path: result/camera_radar_extrinsics.yaml
+# rr_extrinsics_save_path: result/radar_radar_extrinsics.yaml

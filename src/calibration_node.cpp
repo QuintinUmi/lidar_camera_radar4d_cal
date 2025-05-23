@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
     std::string topic_img_pub;
 
 	std::string topic_pc_corners_sub;
+	std::string topic_pc_center_sub;
     std::string topic_img_corners_sub;
+    std::string topic_img_center_sub;
     std::string topic_corners_pub;
 
     std::string topic_trans_sub;
@@ -137,7 +139,9 @@ int main(int argc, char *argv[])
     rosHandle.param("calibration_img_pub_topic", topic_img_pub, std::string("/lidar_camera_cal/image/proc"));
 
     rosHandle.param("pointcloud_process_cor_pub_topic", topic_pc_corners_sub, std::string("/pointcloud_process/corners"));
+    rosHandle.param("pointcloud_process_cen_pub_topic", topic_pc_center_sub, std::string("/pointcloud_process/center"));
     rosHandle.param("image_process_cor_pub_topic", topic_img_corners_sub, std::string("/image_process/corners"));
+    rosHandle.param("image_process_cen_pub_topic", topic_img_center_sub, std::string("/image_process/center"));
 
     rosHandle.param("image_process_trans_pub_topic", topic_trans_sub, std::string("/image_process/trans"));
 
@@ -226,10 +230,12 @@ int main(int argc, char *argv[])
     img_pub.addTopic(topic_img_pub, 5);
     img_pub.addTopic("/show_fusion_cloud", 5);
 
-    CornersSubscriber cor_sub(rosHandle, 5);
-    CornersPublisher cor_pub(rosHandle);
-    cor_sub.addTopic(topic_pc_corners_sub);
-    cor_sub.addTopic(topic_img_corners_sub);
+    PointsetSubscriber pts_sub(rosHandle, 5);
+    PointsetPublisher pts_pub(rosHandle);
+    pts_sub.addTopic(topic_pc_corners_sub);
+    pts_sub.addTopic(topic_pc_center_sub);
+    pts_sub.addTopic(topic_img_corners_sub);
+    pts_sub.addTopic(topic_img_center_sub);
 
     TransformSubscriber transform_sub(rosHandle, 5);
     transform_sub.addTopic(topic_trans_sub);
@@ -313,22 +319,29 @@ int main(int argc, char *argv[])
 
         if(command_received == "capture" || key == 13)
         {
-            CornersPacket rcv_img_corners_packet = cor_sub.getCorners(topic_img_corners_sub);
-            CornersPacket rcv_pc_corners_packet = cor_sub.getCorners(topic_pc_corners_sub);
+            CornersPacket rcv_img_corners_packet = pts_sub.getCorners(topic_img_corners_sub);
+            CornersPacket rcv_img_center_packet = pts_sub.getCorners(topic_img_center_sub);
+            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
+            CornersPacket rcv_pc_center_packet = pts_sub.getCorners(topic_pc_center_sub);
 
             std::vector<geometry_msgs::Point32> img_corners_rcv = rcv_img_corners_packet.corners.polygon.points;
+            std::vector<geometry_msgs::Point32> img_center_rcv = rcv_img_center_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> pc_corners_rcv = rcv_pc_corners_packet.corners.polygon.points;
+            std::vector<geometry_msgs::Point32> pc_center_rcv = rcv_pc_center_packet.corners.polygon.points;
 
-            cornerset_csv_operator.writePointsToCSVAppend(pc_corners_rcv, img_corners_rcv);
+            // cornerset_csv_operator.writePointsToCSVAppend(pc_corners_rcv, img_corners_rcv);
+            cornerset_csv_operator.writePointsToCSVAppend(pc_center_rcv, img_center_rcv);
 
             std::vector<geometry_msgs::Point32> pc_corners_raw;
             std::vector<geometry_msgs::Point32> img_corners_raw;
 
             cornerset_csv_operator.readPointsFromCSV(pc_corners_raw, img_corners_raw);
 
-            if(pc_corners_raw.empty() || img_corners_raw.empty())
+            if(pc_corners_raw.size() < 3 || img_corners_raw.size() < 3)
             {
-                ROS_INFO("No Corners Found\n");
+                ROS_INFO("Corners Not Enough. At Least 3 Groups.\n");
+                command_handler.sendCommand("capture_complete");
+                command_handler.resetReceivedStatus();
                 continue;
             }
 
@@ -357,7 +370,7 @@ int main(int argc, char *argv[])
                 corners_cal.polygon.points.emplace_back(pc_corner);
             }
 
-            cor_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+            pts_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 
             std::cout << R << std::endl << t << std::endl;
 
@@ -366,8 +379,8 @@ int main(int argc, char *argv[])
         }
         if(command_received == "undo" || command_received == "delete_once" || key == 8)
         {
-            CornersPacket rcv_img_corners_packet = cor_sub.getCorners(topic_img_corners_sub);
-            CornersPacket rcv_pc_corners_packet = cor_sub.getCorners(topic_pc_corners_sub);
+            CornersPacket rcv_img_corners_packet = pts_sub.getCorners(topic_img_corners_sub);
+            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
 
             std::vector<geometry_msgs::Point32> img_corners_rcv = rcv_img_corners_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> pc_corners_rcv = rcv_pc_corners_packet.corners.polygon.points;
@@ -377,9 +390,11 @@ int main(int argc, char *argv[])
 
             cornerset_csv_operator.readPointsFromCSV(pc_corners_raw, img_corners_raw);
 
-            if(pc_corners_raw.empty() || img_corners_raw.empty())
+            if(pc_corners_raw.size() < 3 || img_corners_raw.size() < 3)
             {
-                ROS_INFO("No Corners Found\n");
+                ROS_INFO("Corners Not Enough. At Least 3 Groups.\n");
+                command_handler.sendCommand("delete_once_complete");
+                command_handler.resetReceivedStatus();
                 continue;
             }
 
@@ -408,7 +423,7 @@ int main(int argc, char *argv[])
                 corners_cal.polygon.points.emplace_back(pc_corner);
             }
 
-            cor_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+            pts_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 
             std::cout << R << std::endl << t << std::endl;
 
@@ -420,7 +435,7 @@ int main(int argc, char *argv[])
             // Step 1: 获取 rvec 和 tvec
             cv::Vec3d rvec;
             cv::Vec3d tvec;
-            CornersPacket rcv_pc_corners_packet = cor_sub.getCorners(topic_pc_corners_sub);
+            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
             transform_sub.getRvecTvec(topic_trans_sub, rvec, tvec);
 
             auto lidar_corners = rcv_pc_corners_packet.corners.polygon.points;
