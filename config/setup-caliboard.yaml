@@ -6,12 +6,12 @@ dictionary_name: 11
 selected_ids: [12, 150, 364, 544, 712]
 use_center_aruco: false
 center_id: 12
-aruco_marker_size: 500
+aruco_marker_size: 230
 
-aruco_real_length: [252.5, 252.5, 252.5, 252.5, 252.5]
+aruco_real_length: [230, 230, 230, 230, 230]
 
-caliboard_width: 1004
-caliboard_height: 804
+caliboard_width: 1000
+caliboard_height: 800
 
 # criteria_iter_times: 1000000
 # iter_difference: 0.00000001

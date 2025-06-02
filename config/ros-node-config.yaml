@@ -4,7 +4,7 @@ undistort_mode: 0
 frame_id: "velodyne"
 # frame_id: "hesai1"
 
-image_process_img_sub_topic: /hikcamera/image_2/compressed
+image_process_img_sub_topic: /hikcamera/image_1/compressed
 image_process_img_pub_topic: /image_process/proc
 image_process_cor_pub_topic: /image_process/corners
 image_process_cen_pub_topic: /image_process/center

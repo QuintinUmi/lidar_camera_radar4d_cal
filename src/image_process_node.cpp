@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     } else {
         arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     }
-    arucos.setDetectionParameters(3);
+    arucos.setDetectionParameters(1);
     arucos.create();
 
     ImageDraw image_draw;
