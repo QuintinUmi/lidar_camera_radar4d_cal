@@ -36,7 +36,7 @@
 
 
 
-namespace lidar_camera_cal
+namespace lcr_cal
 {
     class ConversionBridge
     {
@@ -80,6 +80,6 @@ namespace lidar_camera_cal
 }
 
 
-using CBridge = lidar_camera_cal::ConversionBridge;
+using CBridge = lcr_cal::ConversionBridge;
 
 #endif

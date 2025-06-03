@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>lidar_camera_cal</name>
+  <name>lcr_cal</name>
   <version>0.0.0</version>
-  <description>The lidar_camera_cal package</description>
+  <description>The lcr_cal package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

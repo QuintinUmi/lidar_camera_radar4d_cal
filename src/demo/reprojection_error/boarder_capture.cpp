@@ -77,8 +77,8 @@
 
 #include "calibration_tool.h"
 
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
 
 
 void setShareParam(ros::NodeHandle nh, RQTConfig rqt_config)
@@ -260,8 +260,8 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr createEdgePointCloud(const std::vector<pcl:
 
 
 using namespace std;
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::image_opr;
 
 int fps(int deltaTime) 
 {
@@ -269,12 +269,12 @@ int fps(int deltaTime)
     return fps;
 }
 
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
 
 
 #define SHOW_DEBUG_MESSAGE false
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     template <typename PointT>
     struct PointCloudPacket {
@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 	// cor_pub.addTopic(topic_cor_pub, 10);
 
     std::string extrinsics_path;
-    rosHandle.param("extrinsics_save_path", extrinsics_path, std::string("src/lidar_camera_cal/config/extrinsics.yaml"));
+    rosHandle.param("extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
 
     YamlOperator yaml_operator(extrinsics_path);
 
@@ -708,8 +708,8 @@ int main(int argc, char *argv[])
 
     std::string topic_command_sub;
     std::string topic_command_pub;
-    rosHandle.param("calibration_command_sub_topic", topic_command_sub, std::string("/lidar_camera_cal/command_controller"));
-    rosHandle.param("calibration_command_pub_topic", topic_command_pub, std::string("/lidar_camera_cal/command_cal_node"));
+    rosHandle.param("calibration_command_sub_topic", topic_command_sub, std::string("/lcr_cal/command_controller"));
+    rosHandle.param("calibration_command_pub_topic", topic_command_pub, std::string("/lcr_cal/command_cal_node"));
     CommandHandler command_handler(rosHandle, topic_command_sub, topic_command_pub);
 
 

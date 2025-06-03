@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(lidar_camera_cal)
+project(lcr_cal)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -32,7 +32,8 @@ find_package(aruco REQUIRED)
 find_package(PCL REQUIRED)
 
 generate_dynamic_reconfigure_options(
-  config/TransformFilter.cfg  
+  config/TransformFilter.cfg 
+  config/Radar4DFilter.cfg 
 )
 
 ## System dependencies are found with CMake's conventions
@@ -126,7 +127,7 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES lidar_camera_cal_lib
+ LIBRARIES lcr_cal_lib
  CATKIN_DEPENDS geometry_msgs livox_ros_driver  nav_msgs pcl_conversions pcl_ros roscpp rospy sensor_msgs std_msgs tf dynamic_reconfigure
  DEPENDS system_lib
 )
@@ -148,7 +149,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDE_DIR}
-  ./include/lidar_camera_cal/
+  ./include/lcr_cal/
   /usr/local/include/
 )
 
@@ -191,7 +192,7 @@ target_link_libraries(file_operator_lib
   ${YAML_CPP_LIBRARIES}
 )
 
-# ------------------------------------- lidar_camera_cal -------------------------------------------
+# ------------------------------------- lcr_cal -------------------------------------------
 
 
 # add_library(calibration_tool_lib
@@ -296,9 +297,12 @@ target_link_libraries(image_process_lib
 
 
 add_executable(test1 src/test1.cpp)
-add_executable(calibration_node src/calibration_node.cpp)
+add_executable(lc_calibration_node src/lc_calibration_node.cpp)
+add_executable(rl_calibration_node src/rl_calibration_node.cpp)
+add_executable(rc_calibration_node src/rc_calibration_node.cpp)
 add_executable(image_process_node src/image_process_node.cpp)
 add_executable(pointcloud_process_node src/pointcloud_process_node.cpp)
+add_executable(radar4d_process_node src/radar4d_process_node.cpp)
 add_executable(controller_menu src/controller_menu.cpp)
 add_executable(lidar_cam_syn_fusion src/demo/lidar_cam_syn_fusion.cpp)
 add_executable(merge_points_pub src/demo/merge_points_pub.cpp)
@@ -312,7 +316,27 @@ target_link_libraries(test1
   ${OpenCV_LIBRARIES}
   
 )
-target_link_libraries(calibration_node
+target_link_libraries(lc_calibration_node
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  conversion_bridge_lib
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+)
+target_link_libraries(rl_calibration_node
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  conversion_bridge_lib
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+)
+target_link_libraries(rc_calibration_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
@@ -332,6 +356,12 @@ target_link_libraries(image_process_node
   image_process_lib
 )
 target_link_libraries(pointcloud_process_node
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  conversion_bridge_lib
+  rviz_draw_lib
+)
+target_link_libraries(radar4d_process_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   conversion_bridge_lib

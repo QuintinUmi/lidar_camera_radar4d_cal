@@ -5,7 +5,7 @@
 #include <std_msgs/String.h>
 
 
-namespace lidar_camera_cal
+namespace lcr_cal
 {
 
     class CommandHandler
@@ -27,7 +27,7 @@ namespace lidar_camera_cal
     };
 
 
-    using namespace lidar_camera_cal;
+    using namespace lcr_cal;
 
 
     CommandHandler::CommandHandler()

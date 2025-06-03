@@ -14,14 +14,14 @@
 #include <Eigen/Dense>
 
 
-namespace lidar_camera_cal
+namespace lcr_cal
 {
-    class CornerSetCsvOperator
+    class PointSetCsvOperator
     {
         public:
 
-            CornerSetCsvOperator(std::string file_path);
-            ~CornerSetCsvOperator();
+            PointSetCsvOperator(std::string file_path);
+            ~PointSetCsvOperator();
 
             void setPath(std::string file_path);
 

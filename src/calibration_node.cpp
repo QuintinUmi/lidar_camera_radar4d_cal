@@ -47,9 +47,9 @@
 
 
 using namespace std;
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
+using namespace lcr_cal::image_opr;
 
 
 int fps(int deltaTime) 
@@ -117,10 +117,11 @@ int main(int argc, char *argv[])
     std::string topic_img_sub;
     std::string topic_img_pub;
 
-	std::string topic_pc_corners_sub;
-	std::string topic_pc_center_sub;
     std::string topic_img_corners_sub;
     std::string topic_img_center_sub;
+    std::string topic_pc_corners_sub;
+	std::string topic_pc_center_sub;
+	std::string topic_rd_center_sub;
     std::string topic_corners_pub;
 
     std::string topic_trans_sub;
@@ -136,17 +137,18 @@ int main(int argc, char *argv[])
 	rosHandle.param("pointcloud_process_pc_sub_topic", topic_pc_sub, std::string("/rslidar_points"));
 
 	rosHandle.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
-    rosHandle.param("calibration_img_pub_topic", topic_img_pub, std::string("/lidar_camera_cal/image/proc"));
+    rosHandle.param("calibration_img_pub_topic", topic_img_pub, std::string("/lcr_cal/image/proc"));
 
-    rosHandle.param("pointcloud_process_cor_pub_topic", topic_pc_corners_sub, std::string("/pointcloud_process/corners"));
-    rosHandle.param("pointcloud_process_cen_pub_topic", topic_pc_center_sub, std::string("/pointcloud_process/center"));
     rosHandle.param("image_process_cor_pub_topic", topic_img_corners_sub, std::string("/image_process/corners"));
     rosHandle.param("image_process_cen_pub_topic", topic_img_center_sub, std::string("/image_process/center"));
+    rosHandle.param("pointcloud_process_cor_pub_topic", topic_pc_corners_sub, std::string("/pointcloud_process/corners"));
+    rosHandle.param("pointcloud_process_cen_pub_topic", topic_pc_center_sub, std::string("/pointcloud_process/center"));
+    rosHandle.param("radar4d_process_cen_pub_topic", topic_rd_center_sub, std::string("/radar4d_process/center"));
 
     rosHandle.param("image_process_trans_pub_topic", topic_trans_sub, std::string("/image_process/trans"));
 
-    rosHandle.param("calibration_command_sub_topic", topic_command_sub, std::string("/lidar_camera_cal/command_controller"));
-    rosHandle.param("calibration_command_pub_topic", topic_command_pub, std::string("/lidar_camera_cal/command_cal_node"));
+    rosHandle.param("calibration_command_sub_topic", topic_command_sub, std::string("/lcr_cal/command_controller"));
+    rosHandle.param("calibration_command_pub_topic", topic_command_pub, std::string("/lcr_cal/command_cal_node"));
 
 
     float caliboard_width;
@@ -215,9 +217,9 @@ int main(int argc, char *argv[])
     std::string cornerset_csv_path;
     std::string error_anaylysis_csv_path;
     std::string extrinsics_path;
-    rosHandle.param("pointset_save_path", cornerset_csv_path, std::string("src/lidar_camera_cal/data/point_set.csv"));
-    rosHandle.param("error_analysis_save_path", error_anaylysis_csv_path, std::string("src/lidar_camera_cal/data/border_error_anaylysis.csv"));
-    rosHandle.param("extrinsics_save_path", extrinsics_path, std::string("src/lidar_camera_cal/config/extrinsics.yaml"));
+    rosHandle.param("pointset_save_path", cornerset_csv_path, std::string("src/lcr_cal/data/point_set.csv"));
+    rosHandle.param("error_analysis_save_path", error_anaylysis_csv_path, std::string("src/lcr_cal/data/border_error_anaylysis.csv"));
+    rosHandle.param("extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
 
 
     PointCloudSubscriber pc_sub(rosHandle, 5);
@@ -232,10 +234,11 @@ int main(int argc, char *argv[])
 
     PointsetSubscriber pts_sub(rosHandle, 5);
     PointsetPublisher pts_pub(rosHandle);
-    pts_sub.addTopic(topic_pc_corners_sub);
-    pts_sub.addTopic(topic_pc_center_sub);
     pts_sub.addTopic(topic_img_corners_sub);
     pts_sub.addTopic(topic_img_center_sub);
+    pts_sub.addTopic(topic_pc_corners_sub);
+    pts_sub.addTopic(topic_pc_center_sub);
+    pts_sub.addTopic(topic_rd_center_sub);
 
     TransformSubscriber transform_sub(rosHandle, 5);
     transform_sub.addTopic(topic_trans_sub);
@@ -253,7 +256,7 @@ int main(int argc, char *argv[])
     RQTConfig rqtCfg;
     // PointcloudFilterReconfigure filterRecfg(rosHandle);
 
-    CornerSetCsvOperator cornerset_csv_operator(cornerset_csv_path);
+    PointSetCsvOperator cornerset_csv_operator(cornerset_csv_path);
     BorderSetCsvOperator boarderset_csv_operator(error_anaylysis_csv_path);
     // boarderset_csv_operator.writePointsToCSVOverwrite(pcl::shared_ptr<pcl::PointCloud<pcl::PointXYZI>>(new pcl::PointCloud<pcl::PointXYZI>), std::vector<std::vector<geometry_msgs::Point32>>());
 
@@ -319,40 +322,42 @@ int main(int argc, char *argv[])
 
         if(command_received == "capture" || key == 13)
         {
-            CornersPacket rcv_img_corners_packet = pts_sub.getCorners(topic_img_corners_sub);
-            CornersPacket rcv_img_center_packet = pts_sub.getCorners(topic_img_center_sub);
-            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
-            CornersPacket rcv_pc_center_packet = pts_sub.getCorners(topic_pc_center_sub);
+            PointsPacket rcv_img_corners_packet = pts_sub.getPoints(topic_img_corners_sub);
+            PointsPacket rcv_img_center_packet = pts_sub.getPoints(topic_img_center_sub);
+            PointsPacket rcv_pc_corners_packet = pts_sub.getPoints(topic_pc_corners_sub);
+            PointsPacket rcv_pc_center_packet = pts_sub.getPoints(topic_pc_center_sub);
+            PointsPacket rcv_rd_center_packet = pts_sub.getPoints(topic_rd_center_sub);
 
             std::vector<geometry_msgs::Point32> img_corners_rcv = rcv_img_corners_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> img_center_rcv = rcv_img_center_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> pc_corners_rcv = rcv_pc_corners_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> pc_center_rcv = rcv_pc_center_packet.corners.polygon.points;
+            std::vector<geometry_msgs::Point32> rd_center_rcv = rcv_rd_center_packet.corners.polygon.points;
 
             // cornerset_csv_operator.writePointsToCSVAppend(pc_corners_rcv, img_corners_rcv);
             cornerset_csv_operator.writePointsToCSVAppend(pc_center_rcv, img_center_rcv);
 
-            std::vector<geometry_msgs::Point32> pc_corners_raw;
-            std::vector<geometry_msgs::Point32> img_corners_raw;
+            std::vector<geometry_msgs::Point32> pc_centers_raw;
+            std::vector<geometry_msgs::Point32> img_centers_raw;
 
-            cornerset_csv_operator.readPointsFromCSV(pc_corners_raw, img_corners_raw);
+            cornerset_csv_operator.readPointsFromCSV(pc_centers_raw, img_centers_raw);
 
-            if(pc_corners_raw.size() < 3 || img_corners_raw.size() < 3)
+            if(pc_centers_raw.size() < 3 || img_centers_raw.size() < 3)
             {
-                ROS_INFO("Corners Not Enough. At Least 3 Groups.\n");
+                ROS_INFO("Centers Not Enough. At Least 3 Groups.\n");
                 command_handler.sendCommand("capture_complete");
                 command_handler.resetReceivedStatus();
                 continue;
             }
 
-            Eigen::Vector3f center_pc = CalTool::computeCentroid(pc_corners_raw);
-            Eigen::Vector3f center_img = CalTool::computeCentroid(img_corners_raw);
+            Eigen::Vector3f center_pc = CalTool::computeCentroid(pc_centers_raw);
+            Eigen::Vector3f center_img = CalTool::computeCentroid(img_centers_raw);
 
             Eigen::MatrixXf pc_center_refer;
             Eigen::MatrixXf img_center_refer;
 
-            CalTool::alignPointsToCentroid(pc_corners_raw, center_pc, pc_center_refer);
-            CalTool::alignPointsToCentroid(img_corners_raw, center_img, img_center_refer);
+            CalTool::alignPointsToCentroid(pc_centers_raw, center_pc, pc_center_refer);
+            CalTool::alignPointsToCentroid(img_centers_raw, center_img, img_center_refer);
 
             R = CalTool::findRotationByICP(pc_center_refer, img_center_refer);
             t = CalTool::findTranslation(center_pc, center_img, R);
@@ -370,7 +375,7 @@ int main(int argc, char *argv[])
                 corners_cal.polygon.points.emplace_back(pc_corner);
             }
 
-            pts_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+            pts_pub.publish(topic_corners_pub, PointsPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 
             std::cout << R << std::endl << t << std::endl;
 
@@ -379,18 +384,18 @@ int main(int argc, char *argv[])
         }
         if(command_received == "undo" || command_received == "delete_once" || key == 8)
         {
-            CornersPacket rcv_img_corners_packet = pts_sub.getCorners(topic_img_corners_sub);
-            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
+            PointsPacket rcv_img_corners_packet = pts_sub.getPoints(topic_img_corners_sub);
+            PointsPacket rcv_pc_corners_packet = pts_sub.getPoints(topic_pc_corners_sub);
 
             std::vector<geometry_msgs::Point32> img_corners_rcv = rcv_img_corners_packet.corners.polygon.points;
             std::vector<geometry_msgs::Point32> pc_corners_rcv = rcv_pc_corners_packet.corners.polygon.points;
 
-            std::vector<geometry_msgs::Point32> pc_corners_raw;
-            std::vector<geometry_msgs::Point32> img_corners_raw;
+            std::vector<geometry_msgs::Point32> pc_centers_raw;
+            std::vector<geometry_msgs::Point32> img_centers_raw;
 
-            cornerset_csv_operator.readPointsFromCSV(pc_corners_raw, img_corners_raw);
+            cornerset_csv_operator.readPointsFromCSV(pc_centers_raw, img_centers_raw);
 
-            if(pc_corners_raw.size() < 3 || img_corners_raw.size() < 3)
+            if(pc_centers_raw.size() < 3 || img_centers_raw.size() < 3)
             {
                 ROS_INFO("Corners Not Enough. At Least 3 Groups.\n");
                 command_handler.sendCommand("delete_once_complete");
@@ -398,14 +403,14 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            Eigen::Vector3f center_pc = CalTool::computeCentroid(pc_corners_raw);
-            Eigen::Vector3f center_img = CalTool::computeCentroid(img_corners_raw);
+            Eigen::Vector3f center_pc = CalTool::computeCentroid(pc_centers_raw);
+            Eigen::Vector3f center_img = CalTool::computeCentroid(img_centers_raw);
 
             Eigen::MatrixXf pc_center_refer;
             Eigen::MatrixXf img_center_refer;
 
-            CalTool::alignPointsToCentroid(pc_corners_raw, center_pc, pc_center_refer);
-            CalTool::alignPointsToCentroid(img_corners_raw, center_img, img_center_refer);
+            CalTool::alignPointsToCentroid(pc_centers_raw, center_pc, pc_center_refer);
+            CalTool::alignPointsToCentroid(img_centers_raw, center_img, img_center_refer);
 
             R = CalTool::findRotationByICP(pc_center_refer, img_center_refer);
             t = CalTool::findTranslation(center_pc, center_img, R);
@@ -423,7 +428,7 @@ int main(int argc, char *argv[])
                 corners_cal.polygon.points.emplace_back(pc_corner);
             }
 
-            pts_pub.publish(topic_corners_pub, CornersPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+            pts_pub.publish(topic_corners_pub, PointsPacket(corners_cal, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 
             std::cout << R << std::endl << t << std::endl;
 
@@ -435,7 +440,7 @@ int main(int argc, char *argv[])
             // Step 1: 获取 rvec 和 tvec
             cv::Vec3d rvec;
             cv::Vec3d tvec;
-            CornersPacket rcv_pc_corners_packet = pts_sub.getCorners(topic_pc_corners_sub);
+            PointsPacket rcv_pc_corners_packet = pts_sub.getPoints(topic_pc_corners_sub);
             transform_sub.getRvecTvec(topic_trans_sub, rvec, tvec);
 
             auto lidar_corners = rcv_pc_corners_packet.corners.polygon.points;

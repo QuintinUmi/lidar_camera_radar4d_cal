@@ -1,6 +1,6 @@
 {
     "python.autoComplete.extraPaths": [
-        "/home/quintinumi/project/ws_lidar_camera_cal/devel/lib/python3/dist-packages",
+        "/home/quintinumi/project/ws_lcr_cal/devel/lib/python3/dist-packages",
         "/home/quintinumi/git_package_src/FAST-LIVO_ws/devel/lib/python3/dist-packages",
         "/home/quintinumi/project/ws_mid360_hikcamera_calibration/devel/lib/python3/dist-packages",
         "/home/quintinumi/git_package_src/wpr_simulation/devel/lib/python3/dist-packages",
@@ -8,7 +8,7 @@
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/home/quintinumi/project/ws_lidar_camera_cal/devel/lib/python3/dist-packages",
+        "/home/quintinumi/project/ws_lcr_cal/devel/lib/python3/dist-packages",
         "/home/quintinumi/git_package_src/FAST-LIVO_ws/devel/lib/python3/dist-packages",
         "/home/quintinumi/project/ws_mid360_hikcamera_calibration/devel/lib/python3/dist-packages",
         "/home/quintinumi/git_package_src/wpr_simulation/devel/lib/python3/dist-packages",

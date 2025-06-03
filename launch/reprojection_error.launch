@@ -1,7 +1,7 @@
 <launch>
-    <param name="package_path" value="$(find lidar_camera_cal)"/>
-    <rosparam file="$(find lidar_camera_cal)/config/ros-node-config.yaml" command="load"/>
-    <rosparam file="$(find lidar_camera_cal)/config/setup-caliboard.yaml" command="load"/>
+    <param name="package_path" value="$(find lcr_cal)"/>
+    <rosparam file="$(find lcr_cal)/config/ros-node-config.yaml" command="load"/>
+    <rosparam file="$(find lcr_cal)/config/setup-caliboard.yaml" command="load"/>
 
     <param name="/shared_parameter/center_x" value="0" />
     <param name="/shared_parameter/center_y" value="0" />
@@ -13,9 +13,9 @@
     <param name="/shared_parameter/rotate_y" value="0" />
     <param name="/shared_parameter/rotate_z" value="0" />
     <param name="shared_parameter" value="value" />
-    <node pkg="lidar_camera_cal" type="boarder_capture" name="boarder_capture" output="screen"/>
-    <node pkg="lidar_camera_cal" type="controller_menu" name="controller_menu" output="screen"  launch-prefix="gnome-terminal -- /bin/sh -c"/>
+    <node pkg="lcr_cal" type="boarder_capture" name="boarder_capture" output="screen"/>
+    <node pkg="lcr_cal" type="controller_menu" name="controller_menu" output="screen"  launch-prefix="gnome-terminal -- /bin/sh -c"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lidar_camera_cal)/rviz/reprojection.rviz" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lcr_cal)/rviz/reprojection.rviz" output="screen"/>
     
 </launch>

@@ -27,7 +27,7 @@
 #include <pcl/visualization/cloud_viewer.h> 
 
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     namespace pointcloud2_opr {
 
@@ -69,8 +69,8 @@ namespace lidar_camera_cal {
             void boxFilter(Eigen::Vector4f min_point, Eigen::Vector4f max_point, bool negative=false);
             void boxFilter(Eigen::Vector3f box_center, float length_x, float length_y, float length_z,
                             float angle_x=0.0, float angle_y=0.0, float angle_z=0.0, bool negative=false);
-            std::vector<pcl::PointIndices> normalClusterExtraction(float smoothness = 3.0 / 180.0 * M_PI, float curvature = 0.05, int k_search = 90, 
-                                                    int number_of_neighbours = 30, int min_cluster_size = 100, int max_cluster_size = 25000);
+            std::vector<pcl::PointIndices> normalClusterExtraction(float smoothness = 20.0 / 180.0 * M_PI, float curvature = 0.8, int k_search = 70, 
+                                                    int number_of_neighbours = 30, int min_cluster_size = 150, int max_cluster_size = 25000);
             std::vector<pcl::PointIndices> normalClusterExtraction(int (*ClustersIndexSelectorFunction)(std::vector<pcl::PointIndices>), 
                                                     float smoothness = 3.0 / 180.0 * M_PI, float curvature = 0.05, int k_search = 90, 
                                                     int number_of_neighbours = 30, int min_cluster_size = 100, int max_cluster_size = 25000);

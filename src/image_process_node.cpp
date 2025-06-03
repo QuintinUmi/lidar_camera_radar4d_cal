@@ -34,8 +34,8 @@
 
 
 using namespace std;
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::image_opr;
 
 int fps(int deltaTime) 
 {
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
     } else {
         arucos = ArucoManager(dictionaryName, ids, arucoRealLength, cameraMatrix, distCoeffs);
     }
-    arucos.setDetectionParameters(3);
+    arucos.setDetectionParameters(1);
     arucos.create();
 
     ImageDraw image_draw;
@@ -312,8 +312,8 @@ int main(int argc, char *argv[])
             ros_center.polygon.points.push_back(ros_point);
         }
         
-        corners_pub.publish(topic_cor_pub, CornersPacket(ros_corners, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
-        corners_pub.publish(topic_cen_pub, CornersPacket(ros_center, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
+        corners_pub.publish(topic_cor_pub, PointsPacket(ros_corners, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
+        corners_pub.publish(topic_cen_pub, PointsPacket(ros_center, frame_id, int(0), rosTimeToTimestamp(ros::Time::now())));
 
         rviz_draw.addText("corner_1", CBridge::rosPoint32ToPoint(ros_corners.polygon.points.at(0)), "1", 0.3, 1.0, 0.0, 0.0);
         rviz_draw.addText("corner_2", CBridge::rosPoint32ToPoint(ros_corners.polygon.points.at(1)), "2", 0.3, 1.0, 0.0, 0.0);

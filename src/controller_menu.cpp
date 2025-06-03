@@ -21,7 +21,7 @@
 #define KEY_ESC 27
 #define KEY_BACKSPACE 127
 
-using namespace lidar_camera_cal;
+using namespace lcr_cal;
 
 void enableRawMode() {
     termios term;
@@ -125,13 +125,13 @@ int main(int argc, char **argv)
     nh.param("calibration_command_pub_topic", topic_command_sub, std::string("/livox_hikcamera_cal/command_cal_node"));
     nh.param("calibration_command_sub_topic", topic_command_pub, std::string("/livox_hikcamera_cal/command_controller"));
 
-    std::string cornerset_csv_path;
+    std::string pointset_csv_path;
     std::string error_ayalysis_csv_path;
-    nh.param("pointset_save_path", cornerset_csv_path, std::string("src/livox_hikcamera_cal/data/point_set.csv"));
+    nh.param("pointset_save_path", pointset_csv_path, std::string("src/livox_hikcamera_cal/data/point_set.csv"));
     nh.param("error_analysis_save_path", error_ayalysis_csv_path, std::string("src/livox_hikcamera_cal/data/border_error_anaylysis.csv"));
 
     CommandHandler command_handler(nh, topic_command_sub, topic_command_pub);
-    CornerSetCsvOperator cornerset_csv_operator(cornerset_csv_path);
+    PointSetCsvOperator pointset_csv_operator(pointset_csv_path);
     BorderSetCsvOperator borderset_csv_operator(error_ayalysis_csv_path);
 
     char key;
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
             int local_key;
             while (true) {
                 int cls_status = system("clear");  // Use system("cls") on Windows
-                cornerset_csv_operator.readPointsFromCSV(group1, group2);
+                pointset_csv_operator.readPointsFromCSV(group1, group2);
 
                 printf("--- Capture Points ---\n");
                 for (size_t i = 0; i < group1.size(); ++i) {
@@ -204,10 +204,10 @@ int main(int argc, char **argv)
                     command_handler.sendCommand("undo");
 
                     if (!group1.empty()) {
-                        cornerset_csv_operator.deleteRowFromCSV(group1.size()-0);
-                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-1);
-                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-2);
-                        // cornerset_csv_operator.deleteRowFromCSV(group1.size()-3);
+                        pointset_csv_operator.deleteRowFromCSV(group1.size()-0);
+                        // pointset_csv_operator.deleteRowFromCSV(group1.size()-1);
+                        // pointset_csv_operator.deleteRowFromCSV(group1.size()-2);
+                        // pointset_csv_operator.deleteRowFromCSV(group1.size()-3);
                     }
                     int cls_status = system("clear");
                     group1.clear();
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
 
             int cls_status = system("clear");  // Clear the screen, use system("cls") on Windows systems
             std::vector<geometry_msgs::Point32> group1, group2;
-            cornerset_csv_operator.readPointsFromCSV(group1, group2);
+            pointset_csv_operator.readPointsFromCSV(group1, group2);
 
             printf("--- View Border Points ---\n");
             if (group1.empty()) {
@@ -335,7 +335,7 @@ int main(int argc, char **argv)
             std::vector<geometry_msgs::Point32> group1, group2;
             int current_selection = 0;
 
-            cornerset_csv_operator.readPointsFromCSV(group1, group2);
+            pointset_csv_operator.readPointsFromCSV(group1, group2);
             if (group1.empty()) {
                 printf("No Boarder points to delete.\n");
                 continue;  // Continue will work as expected if this block is directly inside the main loop.
@@ -363,8 +363,8 @@ int main(int argc, char **argv)
                 } else if (key_press == 'B' && current_selection < group1.size() - 1) {
                     current_selection++;
                 } else if (key_press == 'E') {  // Assuming KEY_ENTER is the newline character
-                    cornerset_csv_operator.deleteRowFromCSV(current_selection + 1);
-                    cornerset_csv_operator.readPointsFromCSV(group1, group2);
+                    pointset_csv_operator.deleteRowFromCSV(current_selection + 1);
+                    pointset_csv_operator.readPointsFromCSV(group1, group2);
                     // Adjust selection if necessary
                     if (current_selection >= group1.size() && !group2.empty()) {
                         current_selection--;
@@ -380,7 +380,7 @@ int main(int argc, char **argv)
             std::vector<geometry_msgs::Point32> group1, group2;
             int current_selection = 0;
 
-            cornerset_csv_operator.readPointsFromCSV(group1, group2);
+            pointset_csv_operator.readPointsFromCSV(group1, group2);
             if (group1.empty()) {
                 printf("No points to delete.\n");
                 continue;  // Continue will work as expected if this block is directly inside the main loop.
@@ -408,8 +408,8 @@ int main(int argc, char **argv)
                 } else if (key_press == 'B' && current_selection < group1.size() - 1) {
                     current_selection++;
                 } else if (key_press == 'E') {  // Assuming KEY_ENTER is the newline character
-                    cornerset_csv_operator.deleteRowFromCSV(current_selection + 1);
-                    cornerset_csv_operator.readPointsFromCSV(group1, group2);
+                    pointset_csv_operator.deleteRowFromCSV(current_selection + 1);
+                    pointset_csv_operator.readPointsFromCSV(group1, group2);
                     // Adjust selection if necessary
                     if (current_selection >= group1.size() && !group2.empty()) {
                         current_selection--;
@@ -423,7 +423,7 @@ int main(int argc, char **argv)
             }
         } else if (key == '7') {
             // Delete All Sets
-            cornerset_csv_operator.writePointsToCSVOverwrite(std::vector<geometry_msgs::Point32>(), std::vector<geometry_msgs::Point32>());
+            pointset_csv_operator.writePointsToCSVOverwrite(std::vector<geometry_msgs::Point32>(), std::vector<geometry_msgs::Point32>());
 
         } else if (key == '8') {
             // Delete All Boarder Sets

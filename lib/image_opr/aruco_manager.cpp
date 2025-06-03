@@ -1,7 +1,7 @@
 #include "image_opr/aruco_manager.h"
 
 using namespace std;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal::image_opr;
 
 ArucoManager::ArucoManager() {
     _dParameters = cv::aruco::DetectorParameters::create();
@@ -44,7 +44,7 @@ void ArucoManager::setDetectionParameters(int cornerRefinementMethod, int adapti
         std::cerr << "Detection parameters are not initialized." << std::endl;
         return;
     }
-    
+     
     _dParameters->cornerRefinementMethod = cornerRefinementMethod;
 
     _dParameters->adaptiveThreshWinSizeMin = adaptiveThreshWinSizeMin;
