@@ -96,7 +96,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(pandar_ros::Point,
 )
 
 
-// namespace lidar_camera_cal {
+// namespace lcr_cal {
 
 
 //     // template <typename PointT>
@@ -202,7 +202,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(pandar_ros::Point,
 //         std::mutex mutex_;
 //     };
 
-// } // namespace lidar_camera_cal
+// } // namespace lcr_cal
 
 using PointType = velodyne_ros::Point;
 using PointCloudType = pcl::PointCloud<PointType>;
@@ -323,8 +323,8 @@ double computeReprojectionError(
 
 
 using namespace std;
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::image_opr;
 
 int fps(int deltaTime) 
 {
@@ -332,8 +332,8 @@ int fps(int deltaTime)
     return fps;
 }
 
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
 
 
 void setShareParam(ros::NodeHandle nh, RQTConfig rqt_config)
@@ -351,7 +351,7 @@ void setShareParam(ros::NodeHandle nh, RQTConfig rqt_config)
 
 
 #define SHOW_DEBUG_MESSAGE false
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     template <typename PointT>
     struct PointCloudPacket {

@@ -30,7 +30,7 @@
 
 using namespace message_filters;
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     struct ImagePacket {
         std::shared_ptr<cv::Mat> image;
@@ -160,7 +160,7 @@ namespace lidar_camera_cal {
 
 
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     struct PointCloudPacket {
         pcl::PointCloud<pcl::PointXYZI> cloud;
@@ -266,10 +266,222 @@ namespace lidar_camera_cal {
 }
 
 
-namespace lidar_camera_cal {
 
-    struct CornersPacket {
-        geometry_msgs::PolygonStamped corners;
+namespace lcr_cal 
+{
+
+    struct Radar4DPoint {
+        float x;
+        float y;
+        float z;
+        float velocity;
+        float snr;
+        float power;
+        uint16_t valid_flg;
+        uint16_t motion_state;
+    
+        Radar4DPoint() : x(0), y(0), z(0), velocity(0), snr(0), power(0), valid_flg(0), motion_state(0) {}
+    };
+    
+    struct Radar4DPacket {
+        std::vector<Radar4DPoint> points;
+        std::string frame_id;
+        int seq;
+        uint64_t timestamp;
+        bool is_valid;
+    
+        // 布尔运算符，用于判断点云包的有效性
+        operator bool() const {
+            return is_valid && !points.empty();
+        }
+    
+        // 默认构造函数，生成无效点云包
+        Radar4DPacket() : is_valid(false) {}
+    
+        // 带参数的构造函数，用于创建有效点云包
+        Radar4DPacket(std::vector<Radar4DPoint> points, std::string frame_id, int seq, uint64_t timestamp)
+            : points(std::move(points)), frame_id(std::move(frame_id)), seq(seq), timestamp(timestamp), is_valid(true) {}
+    };
+    
+    class Radar4DSubscriber {
+    public:
+        Radar4DSubscriber(ros::NodeHandle& nh, size_t queue_size)
+            : nh_(nh), queue_size_(queue_size) {}
+    
+        void addTopic(const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            ros::Subscriber sub = nh_.subscribe<sensor_msgs::PointCloud2>(
+                topic, 1,
+                boost::bind(&Radar4DSubscriber::pointCloudCallback, this, _1, topic)
+            );
+            subscribers_.emplace_back(sub);
+            ROS_INFO("Subscribed to radar4d topic: %s", topic.c_str());
+        }
+    
+        void addTopics(const std::vector<std::string>& topics) {
+            for (const auto& topic : topics) {
+                addTopic(topic);
+            }
+        }
+    
+        Radar4DPacket getRadar4DPacket(const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto it = radar_queues_.find(topic);
+            if (it != radar_queues_.end() && !it->second.empty()) {
+                Radar4DPacket packet = std::move(it->second.front());
+                it->second.pop();
+                return packet;
+            }
+            return Radar4DPacket(); // 返回无效点云包
+        }
+    
+    private:
+        void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg, const std::string& topic) {
+            std::lock_guard<std::mutex> lock(mutex_);
+    
+            // 解析点云字段
+            std::vector<Radar4DPoint> radar_points;
+            const uint32_t point_step = msg->point_step; // 每个点的字节数
+            const uint32_t data_size = msg->data.size();
+    
+            for (size_t i = 0; i < data_size; i += point_step) {
+                Radar4DPoint point;
+                const uint8_t* point_data = &msg->data[i];
+    
+                // 解析字段
+                point.x = *reinterpret_cast<const float*>(point_data + 0);
+                point.y = *reinterpret_cast<const float*>(point_data + 4);
+                point.z = *reinterpret_cast<const float*>(point_data + 8);
+                point.velocity = *reinterpret_cast<const float*>(point_data + 16);
+                point.snr = *reinterpret_cast<const float*>(point_data + 20);
+                point.power = *reinterpret_cast<const float*>(point_data + 24);
+                point.valid_flg = *reinterpret_cast<const uint16_t*>(point_data + 28);
+                point.motion_state = *reinterpret_cast<const uint16_t*>(point_data + 30);
+    
+                // 保存所有点
+                radar_points.push_back(point);
+            }
+    
+            // 如果队列超过容量，移除最早的数据
+            if (radar_queues_[topic].size() >= queue_size_) {
+                radar_queues_[topic].pop();
+            }
+    
+            radar_queues_[topic].emplace(radar_points, msg->header.frame_id, msg->header.seq, rosTimeToTimestamp(msg->header.stamp));
+        }
+    
+        ros::NodeHandle nh_;
+        std::vector<ros::Subscriber> subscribers_;
+        std::map<std::string, std::queue<Radar4DPacket>> radar_queues_;
+        std::mutex mutex_;
+        size_t queue_size_;
+    };
+    
+    class Radar4DPublisher {
+    public:
+        Radar4DPublisher(ros::NodeHandle& nh) : nh_(nh) {}
+    
+        void addTopic(const std::string& topic, size_t queue_size) {
+            pubs_[topic] = nh_.advertise<sensor_msgs::PointCloud2>(topic, queue_size);
+            ROS_INFO("Radar4D publisher added for topic: %s", topic.c_str());
+        }
+
+        void addTopics(const std::vector<std::string>& topics, size_t queue_size) {
+            for (const std::string& topic : topics) {
+                addTopic(topic, queue_size);
+            }
+        }
+    
+        void publish(const std::string& topic, const Radar4DPacket& radar_packet) {
+            auto it = pubs_.find(topic);
+            if (it != pubs_.end() && radar_packet) { // 使用布尔运算符判断点云包有效性
+                sensor_msgs::PointCloud2 msg;
+                msg.header.stamp = ros::Time().fromNSec(radar_packet.timestamp);
+                msg.header.frame_id = radar_packet.frame_id;
+                msg.height = 1;
+                msg.width = radar_packet.points.size();
+                msg.is_dense = true;
+                msg.is_bigendian = false;
+                msg.point_step = 32; // 每个点 32 字节
+                msg.row_step = msg.point_step * msg.width;
+    
+                // 定义字段
+                msg.fields.resize(8);
+                msg.fields[0].name = "x";
+                msg.fields[0].offset = 0;
+                msg.fields[0].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[0].count = 1;
+    
+                msg.fields[1].name = "y";
+                msg.fields[1].offset = 4;
+                msg.fields[1].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[1].count = 1;
+    
+                msg.fields[2].name = "z";
+                msg.fields[2].offset = 8;
+                msg.fields[2].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[2].count = 1;
+    
+                msg.fields[3].name = "velocity";
+                msg.fields[3].offset = 16;
+                msg.fields[3].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[3].count = 1;
+    
+                msg.fields[4].name = "snr";
+                msg.fields[4].offset = 20;
+                msg.fields[4].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[4].count = 1;
+    
+                msg.fields[5].name = "power";
+                msg.fields[5].offset = 24;
+                msg.fields[5].datatype = sensor_msgs::PointField::FLOAT32;
+                msg.fields[5].count = 1;
+    
+                msg.fields[6].name = "valid_flg";
+                msg.fields[6].offset = 28;
+                msg.fields[6].datatype = sensor_msgs::PointField::UINT16;
+                msg.fields[6].count = 1;
+    
+                msg.fields[7].name = "motion_state";
+                msg.fields[7].offset = 30;
+                msg.fields[7].datatype = sensor_msgs::PointField::UINT16;
+                msg.fields[7].count = 1;
+    
+                // 填充点云数据
+                msg.data.resize(msg.row_step);
+                for (size_t i = 0; i < radar_packet.points.size(); ++i) {
+                    const Radar4DPoint& point = radar_packet.points[i];
+                    uint8_t* ptr = &msg.data[i * msg.point_step];
+                    memcpy(ptr + 0, &point.x, sizeof(float));
+                    memcpy(ptr + 4, &point.y, sizeof(float));
+                    memcpy(ptr + 8, &point.z, sizeof(float));
+                    memcpy(ptr + 16, &point.velocity, sizeof(float));
+                    memcpy(ptr + 20, &point.snr, sizeof(float));
+                    memcpy(ptr + 24, &point.power, sizeof(float));
+                    memcpy(ptr + 28, &point.valid_flg, sizeof(uint16_t));
+                    memcpy(ptr + 30, &point.motion_state, sizeof(uint16_t));
+                }
+    
+                it->second.publish(msg);
+                ROS_INFO("Published Radar4D data to topic: %s", topic.c_str());
+            } else {
+                ROS_WARN("No publisher available for topic: %s", topic.c_str());
+            }
+        }
+    
+    private:
+        ros::NodeHandle nh_;
+        std::map<std::string, ros::Publisher> pubs_;
+    };
+}
+
+
+
+
+namespace lcr_cal {
+
+    struct PointsPacket {
+        geometry_msgs::PolygonStamped points;
         std::string frame_id;
         int seq;
         uint64_t timestamp;
@@ -279,9 +491,9 @@ namespace lidar_camera_cal {
             return is_valid;
         }
 
-        CornersPacket() : is_valid(false) {}
-        CornersPacket(geometry_msgs::PolygonStamped corners, std::string frame_id, int seq, uint64_t timestamp)
-            : corners(corners), frame_id(frame_id), seq(seq), timestamp(timestamp), is_valid(true) {}
+        PointsPacket() : is_valid(false) {}
+        PointsPacket(geometry_msgs::PolygonStamped points, std::string frame_id, int seq, uint64_t timestamp)
+            : points(points), frame_id(frame_id), seq(seq), timestamp(timestamp), is_valid(true) {}
     };
 
     class PointsetSubscriber {
@@ -293,10 +505,10 @@ namespace lidar_camera_cal {
             std::lock_guard<std::mutex> lock(mutex_);
             ros::Subscriber sub = nh_.subscribe<geometry_msgs::PolygonStamped>(
                 topic, 1, 
-                boost::bind(&PointsetSubscriber::CornersCallback, this, _1, topic)
+                boost::bind(&PointsetSubscriber::pointsCallback, this, _1, topic)
             );
             subscribers_.emplace_back(sub);
-            if (SHOW_DEBUG_MESSAGE) ROS_INFO("Subscribed to Corners topic: %s", topic.c_str());
+            if (SHOW_DEBUG_MESSAGE) ROS_INFO("Subscribed to points topic: %s", topic.c_str());
         }
 
         void addTopics(const std::vector<std::string>& topics) {
@@ -305,30 +517,30 @@ namespace lidar_camera_cal {
             }
         }
 
-        CornersPacket getCorners(const std::string& topic) {
+        PointsPacket getPoints(const std::string& topic) {
             std::lock_guard<std::mutex> lock(mutex_);
-            auto it = corners_queues_.find(topic);
-            if (it != corners_queues_.end() && !it->second.empty()) {
-                CornersPacket packet = std::move(it->second.front());
+            auto it = points_queues_.find(topic);
+            if (it != points_queues_.end() && !it->second.empty()) {
+                PointsPacket packet = std::move(it->second.front());
                 it->second.pop();
                 return packet;
             }
-            return CornersPacket();  
+            return PointsPacket();  
         }
 
     private:
-        void CornersCallback(const geometry_msgs::PolygonStamped::ConstPtr& msg, const std::string& topic) {
+        void pointsCallback(const geometry_msgs::PolygonStamped::ConstPtr& msg, const std::string& topic) {
             std::lock_guard<std::mutex> lock(mutex_);
-            if (corners_queues_[topic].size() >= queue_size_) {
-                corners_queues_[topic].pop();
+            if (points_queues_[topic].size() >= queue_size_) {
+                points_queues_[topic].pop();
             }
-            if (corners_queues_[topic].size() > queue_size_) corners_queues_[topic].pop();
-            corners_queues_[topic].emplace(*msg, msg->header.frame_id, msg->header.seq, rosTimeToTimestamp(msg->header.stamp));
+            if (points_queues_[topic].size() > queue_size_) points_queues_[topic].pop();
+            points_queues_[topic].emplace(*msg, msg->header.frame_id, msg->header.seq, rosTimeToTimestamp(msg->header.stamp));
         }
 
         ros::NodeHandle nh_;
         std::vector<ros::Subscriber> subscribers_;
-        std::map<std::string, std::queue<CornersPacket>> corners_queues_;
+        std::map<std::string, std::queue<PointsPacket>> points_queues_;
         std::mutex mutex_;
         size_t queue_size_;
     };
@@ -349,15 +561,15 @@ namespace lidar_camera_cal {
             }
         }
 
-        void publish(const std::string& topic, const CornersPacket& corners_packet) {
+        void publish(const std::string& topic, const PointsPacket& points_packet) {
             auto it = pub_.find(topic); 
-            if (it != pub_.end() && corners_packet) {
-                geometry_msgs::PolygonStamped corners;
-                corners = corners_packet.corners;
-                corners.header.stamp = timestampToRosTime(corners_packet.timestamp);
-                corners.header.frame_id = corners_packet.frame_id;  // 设置适当的 frame_id
-                it->second.publish(corners);
-                if (SHOW_DEBUG_MESSAGE) ROS_INFO("Published Corners to topic: %s", topic.c_str());
+            if (it != pub_.end() && points_packet) {
+                geometry_msgs::PolygonStamped points;
+                points = points_packet.points;
+                points.header.stamp = timestampToRosTime(points_packet.timestamp);
+                points.header.frame_id = points_packet.frame_id;  // 设置适当的 frame_id
+                it->second.publish(points);
+                if (SHOW_DEBUG_MESSAGE) ROS_INFO("Published points to topic: %s", topic.c_str());
             } else {
                 ROS_WARN("No publisher available for topic: %s", topic.c_str());
             }
@@ -371,7 +583,7 @@ namespace lidar_camera_cal {
 
 
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     struct TransformPacket {
         geometry_msgs::PoseStamped pose;  // 使用 PoseStamped 传输

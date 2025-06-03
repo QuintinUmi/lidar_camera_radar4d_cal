@@ -27,7 +27,7 @@
 #include <pcl/visualization/cloud_viewer.h> 
 
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
 
     namespace pointcloud2_opr {
 

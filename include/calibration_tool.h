@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace lidar_camera_cal
+namespace lcr_cal
 {
     class CalTool
     {

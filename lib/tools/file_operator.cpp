@@ -13,23 +13,23 @@
 
 #include "tools/file_operator.h"
 
-using namespace lidar_camera_cal;
+using namespace lcr_cal;
 
 
-CornerSetCsvOperator::CornerSetCsvOperator(std::string file_path)
+PointSetCsvOperator::PointSetCsvOperator(std::string file_path)
 {   
     this->setPath(file_path);
 }
 
-CornerSetCsvOperator::~CornerSetCsvOperator(){}
+PointSetCsvOperator::~PointSetCsvOperator(){}
 
 
-void CornerSetCsvOperator::setPath(std::string file_path)
+void PointSetCsvOperator::setPath(std::string file_path)
 {
     this->file_path_ = file_path;
 }
 
-void CornerSetCsvOperator::writePointsToCSVOverwrite(const std::vector<geometry_msgs::Point32>& group1, const std::vector<geometry_msgs::Point32>& group2) 
+void PointSetCsvOperator::writePointsToCSVOverwrite(const std::vector<geometry_msgs::Point32>& group1, const std::vector<geometry_msgs::Point32>& group2) 
 {
     std::ofstream outFile(this->file_path_, std::ofstream::trunc);  
     if (!outFile.is_open()) {
@@ -49,7 +49,7 @@ void CornerSetCsvOperator::writePointsToCSVOverwrite(const std::vector<geometry_
 
 
 
-void CornerSetCsvOperator::writePointsToCSVAppend(const std::vector<geometry_msgs::Point32>& group1, const std::vector<geometry_msgs::Point32>& group2) 
+void PointSetCsvOperator::writePointsToCSVAppend(const std::vector<geometry_msgs::Point32>& group1, const std::vector<geometry_msgs::Point32>& group2) 
 {
     std::ofstream outFile(this->file_path_, std::ofstream::app);  
     if(!outFile.is_open()) 
@@ -71,7 +71,7 @@ void CornerSetCsvOperator::writePointsToCSVAppend(const std::vector<geometry_msg
 
 
 
-void CornerSetCsvOperator::deleteRowFromCSV(size_t rowIndex) 
+void PointSetCsvOperator::deleteRowFromCSV(size_t rowIndex) 
 {
     std::ifstream inFile(this->file_path_);
     std::vector<std::string> lines;
@@ -114,7 +114,7 @@ void CornerSetCsvOperator::deleteRowFromCSV(size_t rowIndex)
     std::cout << "Row " << rowIndex << " deleted successfully from " << this->file_path_ << "\n";
 }
 
-void CornerSetCsvOperator::readPointsFromCSV(std::vector<geometry_msgs::Point32>& group1, std::vector<geometry_msgs::Point32>& group2) 
+void PointSetCsvOperator::readPointsFromCSV(std::vector<geometry_msgs::Point32>& group1, std::vector<geometry_msgs::Point32>& group2) 
 {
     group1.clear();
     group2.clear();

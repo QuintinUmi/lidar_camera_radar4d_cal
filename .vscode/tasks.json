@@ -7,7 +7,7 @@
             "command": "/bin/bash",
             "args": [
                 "-c",
-                "source /opt/ros/noetic/setup.bash && catkin_make --directory /home/quintinumi/project/ws_lidar_camera_cal -DCMAKE_BUILD_TYPE=RelWithDebInfo"
+                "source /opt/ros/noetic/setup.bash && catkin_make --directory /home/quintinumi/project/ws_lcr_cal -DCMAKE_BUILD_TYPE=RelWithDebInfo"
             ],
             "group": {
                 "kind": "build",

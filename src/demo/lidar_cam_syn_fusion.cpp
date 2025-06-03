@@ -20,9 +20,9 @@
 #include "tools/conversion_bridge.h"
 #include "tools/file_operator.h"
 
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
-using namespace lidar_camera_cal::image_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
+using namespace lcr_cal::image_opr;
 
 std::map<ros::Time, sensor_msgs::Image> image_cache;
 std::map<ros::Time, sensor_msgs::PointCloud2> cloud_cache;
@@ -143,13 +143,13 @@ int main(int argc, char **argv) {
 	nh.param("pointcloud_process_pc_sub_topic", topic_pc_sub, std::string("/rslidar_points"));
 
 	nh.param("image_process_img_sub_topic", topic_img_sub, std::string("/hikcamera/image_0/compressed"));
-    nh.param("calibration_img_pub_topic", topic_img_pub, std::string("/lidar_camera_cal/image/proc"));
+    nh.param("calibration_img_pub_topic", topic_img_pub, std::string("/lcr_cal/image/proc"));
 
     nh.param("pointcloud_process_cor_pub_topic", topic_pc_corners_sub, std::string("/pointcloud_process/corners"));
     nh.param("image_process_cor_pub_topic", topic_img_corners_sub, std::string("/image_process/corners"));
 
-    nh.param("calibration_command_sub_topic", topic_command_sub, std::string("/lidar_camera_cal/command_controller"));
-    nh.param("calibration_command_pub_topic", topic_command_pub, std::string("/lidar_camera_cal/command_cal_node"));
+    nh.param("calibration_command_sub_topic", topic_command_sub, std::string("/lcr_cal/command_controller"));
+    nh.param("calibration_command_pub_topic", topic_command_pub, std::string("/lcr_cal/command_cal_node"));
 
 
     std::string packagePath;
@@ -191,9 +191,9 @@ int main(int argc, char **argv) {
     std::string cornerset_csv_path;
     std::string error_anaylysis_csv_path;
     std::string extrinsics_path;
-    nh.param("pointset_save_path", cornerset_csv_path, std::string("src/lidar_camera_cal/data/point_set.csv"));
-    nh.param("error_analysis_save_path", error_anaylysis_csv_path, std::string("src/lidar_camera_cal/data/border_error_anaylysis.csv"));
-    nh.param("extrinsics_save_path", extrinsics_path, std::string("src/lidar_camera_cal/config/extrinsics.yaml"));
+    nh.param("pointset_save_path", cornerset_csv_path, std::string("src/lcr_cal/data/point_set.csv"));
+    nh.param("error_analysis_save_path", error_anaylysis_csv_path, std::string("src/lcr_cal/data/border_error_anaylysis.csv"));
+    nh.param("extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
 
     YamlOperator yaml_operator(extrinsics_path);
 

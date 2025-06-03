@@ -72,9 +72,9 @@ def place_aruco_on_a4(input_image_path, output_file, dpi=300):
 
 
 # 参数设置
-svg_path = "/home/quintinumi/project/ws_lidar_camera_cal/src/lidar_camera_cal/src/demo/6x6_1000-12.svg"  # 输入的 SVG 文件路径
-temp_png_path = "/home/quintinumi/project/ws_lidar_camera_cal/src/lidar_camera_cal/src/demo/temp_converted.png"  # 临时 PNG 文件路径
-output_file = "/home/quintinumi/project/ws_lidar_camera_cal/src/lidar_camera_cal/src/demo/id_150__dictName_10_A4.png"  # 最终输出文件路径
+svg_path = "/home/quintinumi/project/ws_lcr_cal/src/lcr_cal/src/demo/6x6_1000-12.svg"  # 输入的 SVG 文件路径
+temp_png_path = "/home/quintinumi/project/ws_lcr_cal/src/lcr_cal/src/demo/temp_converted.png"  # 临时 PNG 文件路径
+output_file = "/home/quintinumi/project/ws_lcr_cal/src/lcr_cal/src/demo/id_150__dictName_10_A4.png"  # 最终输出文件路径
 dpi = 300  # 打印分辨率（DPI）
 
 # 1. 将 SVG 转换为 PNG

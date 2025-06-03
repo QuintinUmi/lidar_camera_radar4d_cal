@@ -1,6 +1,6 @@
 #include "tools/rviz_draw.h"
 
-namespace lidar_camera_cal
+namespace lcr_cal
 {
 
     RvizDraw::RvizDraw()

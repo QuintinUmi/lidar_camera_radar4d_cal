@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <cstdint>
 
-namespace lidar_camera_cal {
+namespace lcr_cal {
     
     uint64_t rosTimeToTimestamp(const ros::Time& time) {
         return time.toNSec();  // 返回纳秒数

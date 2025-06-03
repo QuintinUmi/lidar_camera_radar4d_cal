@@ -34,7 +34,7 @@
 
 // pcl::visualization::CloudViewer viewer("viewer");
 
-namespace lidar_camera_cal::pointcloud2_opr
+namespace lcr_cal::pointcloud2_opr
 {
     template<typename PointT>
     PointCloud2Proc<PointT>::PointCloud2Proc(bool remove_origin_point) :    

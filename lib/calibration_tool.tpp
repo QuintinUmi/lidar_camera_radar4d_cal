@@ -1,6 +1,6 @@
 #include "calibration_tool.h"
 
-using namespace lidar_camera_cal;
+using namespace lcr_cal;
 
 
 CalTool::CalTool()

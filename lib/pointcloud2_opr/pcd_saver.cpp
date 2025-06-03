@@ -9,7 +9,7 @@
 
 #include "pointcloud2_opr/pcd_saver.h"
 
-namespace lidar_camera_cal::pointcloud2_opr
+namespace lcr_cal::pointcloud2_opr
 {
     PCDSaver::PCDSaver()
     {

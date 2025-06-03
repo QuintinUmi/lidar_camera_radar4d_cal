@@ -36,8 +36,8 @@
 
 #include "calibration_tool.h"
 
-using namespace lidar_camera_cal;
-using namespace lidar_camera_cal::pointcloud2_opr;
+using namespace lcr_cal;
+using namespace lcr_cal::pointcloud2_opr;
 
 
 void setShareParam(ros::NodeHandle nh, RQTConfig rqt_config)
@@ -186,8 +186,8 @@ int main(int argc, char *argv[])
         }
 
 		std_msgs::Header header;
-		pts_pub.publish(topic_cor_pub, CornersPacket(ros_corners, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
-		pts_pub.publish(topic_cen_pub, CornersPacket(ros_center, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+		pts_pub.publish(topic_cor_pub, PointsPacket(ros_corners, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
+		pts_pub.publish(topic_cen_pub, PointsPacket(ros_center, frame_id, 0, rosTimeToTimestamp(ros::Time::now())));
 		
 
 		if(corners->size() == 0)
