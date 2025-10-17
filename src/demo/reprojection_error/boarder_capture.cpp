@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
 	// cor_pub.addTopic(topic_cor_pub, 10);
 
     std::string extrinsics_path;
-    rosHandle.param("extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
+    rosHandle.param("lc_extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
 
     YamlOperator yaml_operator(extrinsics_path);
 

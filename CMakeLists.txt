@@ -305,6 +305,7 @@ add_executable(pointcloud_process_node src/pointcloud_process_node.cpp)
 add_executable(radar4d_process_node src/radar4d_process_node.cpp)
 add_executable(controller_menu src/controller_menu.cpp)
 add_executable(lidar_cam_syn_fusion src/demo/lidar_cam_syn_fusion.cpp)
+add_executable(radar4d_cam_syn_fusion src/demo/radar4d_cam_syn_fusion.cpp)
 add_executable(merge_points_pub src/demo/merge_points_pub.cpp)
 
 add_executable(boarder_capture src/demo/reprojection_error/boarder_capture.cpp)
@@ -372,6 +373,16 @@ target_link_libraries(controller_menu
   file_operator_lib
 )
 target_link_libraries(lidar_cam_syn_fusion
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  conversion_bridge_lib
+  aruco_manager_lib
+  image_draw_lib
+  image_process_lib
+  file_operator_lib
+)
+target_link_libraries(radar4d_cam_syn_fusion
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
