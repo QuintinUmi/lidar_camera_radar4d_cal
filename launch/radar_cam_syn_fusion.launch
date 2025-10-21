@@ -1,0 +1,11 @@
+<launch>
+    <param name="package_path" value="$(find lcr_cal)"/>
+    <rosparam file="$(find lcr_cal)/config/ros-node-config.yaml" command="load"/>
+    <rosparam file="$(find lcr_cal)/config/setup-caliboard.yaml" command="load"/>
+
+    <node pkg="lcr_cal" type="merge_points_pub" name="merge_points_pub" output="screen"/>
+    <node pkg="lcr_cal" type="radar4d_cam_syn_fusion" name="radar4d_cam_syn_fusion" output="screen"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find lcr_cal)/rviz/fusion.rviz" output="screen"/>
+    
+</launch>

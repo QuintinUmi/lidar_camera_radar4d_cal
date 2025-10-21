@@ -1,25 +1,26 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "${default}",
-        "limitSymbolsToIncludedHeaders": false
-      },
-      "includePath": [
-        "/home/quintinumi/project/ws_lidar_camera_cal/devel/include/**",
-        "/opt/ros/noetic/include/**",
-        "/home/quintinumi/project/ws_lidar_camera_cal/src/lidar_camera_cal/include/**",
-        "/usr/include/**",
-        "/usr/local/include/aruco/**",
-        "/usr/local/include/opencv4",
-        "/usr/include/x86_64-linux-gnu/bits/**"
-      ],
-      "name": "ROS",
-      "intelliSenseMode": "clang-x64",  // 使用 Clang 的 IntelliSense 模式
-      "compilerPath": "/usr/bin/clang",  // 指向已安装的 Clang 编译器
-      "cStandard": "gnu17",  // C 标准保持为 gnu17
-      "cppStandard": "gnu++20"  // C++ 标准保持为 gnu++20，假设你想试用 GCC 或 Clang 的 C++20 支持
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${default}",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/home/quintinumi/project/ws_lidar_camera_radar_cal/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/quintinumi/project/ws_lidar_camera_radar_cal/src/lidar_camera_radar4d_cal/include/**",
+                "/usr/include/**",
+                "/usr/local/include/aruco/**",
+                "/usr/local/include/opencv4",
+                "/usr/include/x86_64-linux-gnu/bits/**",
+                "${workspaceFolder}/include"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "clang-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++20"
+        }
+    ],
+    "version": 4
 }

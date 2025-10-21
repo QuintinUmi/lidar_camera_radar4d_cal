@@ -32,7 +32,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Image
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -131,7 +131,10 @@ Visualization Manager:
       Marker Topic: /pointcloud_process_node/rviz_draw
       Name: MarkerArray
       Namespaces:
-        {}
+        arrows: true
+        lines: true
+        points: true
+        texts: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -139,7 +142,9 @@ Visualization Manager:
       Marker Topic: /image_process_node/rviz_draw
       Name: MarkerArray
       Namespaces:
-        {}
+        arrows: true
+        lines: true
+        texts: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -213,7 +218,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: hesai1
+    Fixed Frame: velodyne
     Frame Rate: 30
   Name: root
   Tools:
@@ -237,7 +242,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 20.454723358154297
+      Distance: 6.571711540222168
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -245,17 +250,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.7898492217063904
-        Y: -1.8344433307647705
-        Z: 1.4936845302581787
+        X: -0.2890157401561737
+        Y: -1.8928083181381226
+        Z: 1.097358226776123
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2597980201244354
+      Pitch: 0.08479799330234528
       Target Frame: <Fixed Frame>
-      Yaw: 0.9353774785995483
+      Yaw: 4.673545837402344
     Saved: ~
 Window Geometry:
   Displays:

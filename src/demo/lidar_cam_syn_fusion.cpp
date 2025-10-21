@@ -191,9 +191,9 @@ int main(int argc, char **argv) {
     std::string cornerset_csv_path;
     std::string error_anaylysis_csv_path;
     std::string extrinsics_path;
-    nh.param("pointset_save_path", cornerset_csv_path, std::string("src/lcr_cal/data/point_set.csv"));
+    nh.param("lc_pointset_save_path", cornerset_csv_path, std::string("src/lcr_cal/data/point_set.csv"));
     nh.param("error_analysis_save_path", error_anaylysis_csv_path, std::string("src/lcr_cal/data/border_error_anaylysis.csv"));
-    nh.param("extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
+    nh.param("lc_extrinsics_save_path", extrinsics_path, std::string("src/lcr_cal/config/extrinsics.yaml"));
 
     YamlOperator yaml_operator(extrinsics_path);
 
